@@ -74,7 +74,7 @@ public class UserDirectoryMenu extends UserviewMenu {
 
     @Override
     public String getName() {
-        return getLabel() + getVersion();
+        return getLabel();
     }
 
     @Override
@@ -89,7 +89,7 @@ public class UserDirectoryMenu extends UserviewMenu {
 
     @Override
     public String getLabel() {
-        return getPropertyString("label");
+        return "User Directory";
     }
 
     @Override

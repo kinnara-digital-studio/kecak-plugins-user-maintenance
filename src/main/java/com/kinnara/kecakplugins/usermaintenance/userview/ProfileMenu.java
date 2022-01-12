@@ -28,7 +28,7 @@ public class ProfileMenu extends UserviewMenu{
 	
 	@Override
 	public String getLabel() {
-		return this.getName();
+		return "User Profile";
 	}
 
 	@Override
@@ -38,7 +38,7 @@ public class ProfileMenu extends UserviewMenu{
 
 	@Override
 	public String getName() {
-		return "User Profile";
+		return getLabel();
 	}
 
 	@Override
@@ -98,7 +98,7 @@ public class ProfileMenu extends UserviewMenu{
         form.setLoadBinder(new UserDirectoryFormBinder());
         form.setStoreBinder(new UserDirectoryFormBinder());
         
-        FormData formData = new FormData();
+        final FormData formData = new FormData();
         formData.setPrimaryKeyValue(currentUser);
         
         final Collection<String> defaultFields = Arrays.asList(
