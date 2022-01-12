@@ -1,0 +1,26 @@
+[
+  {
+    "title": "@@profileMenu.title@@",
+    "properties": [
+      {
+        "name" : "id",
+        "label" : "@@profileMenu.id@@",
+        "type" : "hidden"
+      },
+      {
+        "name" : "customId",
+        "label" : "@@profileMenu.customId@@",
+        "type" : "textfield",
+        "regex_validation" : "^[a-zA-Z0-9_]+$",
+        "validation_message" : "Invalid ID"
+      },
+      {
+        "name" : "label",
+        "label" : "@@profileMenu.label@@",
+        "type" : "textfield",
+        "required" : "true",
+        "value" : "Update Profile"
+      }
+    ]
+  }
+]
