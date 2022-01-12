@@ -14,7 +14,6 @@ import org.joget.workflow.util.WorkflowUtil;
 import org.springframework.context.ApplicationContext;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Date;

@@ -117,21 +117,42 @@ public class UserDirectoryFormBinder extends DefaultFormBinder implements FormLo
                             .map(FormRow::getId)
                             .orElseGet(formData::getPrimaryKeyValue);
 
-                    @Nullable User user = Optional.ofNullable(primaryKey)
-                            .filter(s -> !s.isEmpty())
-                            .map(userDao::getUserById)
-                            .orElse(null);
+                    row.setId(primaryKey);
 
-                    @Nullable Organization organization = Optional.ofNullable(row.getProperty("organizationId"))
-                            .map(organizationDao::getOrganization)
-                            .orElse(null);
+                    final Optional<User> optUser = Optional.ofNullable(primaryKey)
+                            .filter(s -> !s.isEmpty())
+                            .map(userDao::getUserById);
+
+                    final Optional<Organization> optOrganization = Optional.ofNullable(row.getProperty("organizationId"))
+                            .map(organizationDao::getOrganization);
 
                     final String active = row.getProperty("active", "true");
                     final String password = row.getProperty("password", "");
                     final String confirmPassword = row.getProperty("confirm_password", "");
 
-                    if (user == null) {
-                        user = new User();
+                    if (optUser.isPresent()) {
+                        final User user = optUser.get();
+                        user.setId(row.getId());
+                        user.setUsername(row.getProperty("username", row.getId()));
+                        user.setFirstName(row.getProperty("firstName"));
+                        user.setLastName(row.getProperty("lastName"));
+                        user.setEmail(row.getProperty("email"));
+                        user.setActive("true".equals(active) || "active".equals(active) || "1".equals(active) ? 1 : 0);
+                        user.setLocale(row.getProperty("locale"));
+                        user.setTelephoneNumber(row.getProperty("telephone_number"));
+                        user.setDateModified(row.getDateModified());
+                        user.setModifiedBy(row.getModifiedBy());
+
+                        updatePassword(user, password, confirmPassword);
+
+                        optOrganization.ifPresent(o -> setEmployment(user, o));
+
+                        userDao.updateUser(user);
+
+                        row.setDateModified(now);
+                        row.setModifiedBy(currentUser);
+                    } else {
+                        final User user = new User();
                         user.setId(row.getId());
                         user.setUsername(row.getProperty("username", row.getId()));
                         user.setFirstName(row.getProperty("firstName"));
@@ -153,35 +174,10 @@ public class UserDirectoryFormBinder extends DefaultFormBinder implements FormLo
                                 .map(Collections::singleton)
                                 .ifPresent(user::setRoles);
 
-                        if (organization != null) {
-                            setEmployment(user, organization);
-                        }
+                        optOrganization.ifPresent(o -> setEmployment(user, o));
 
                         row.setDateCreated(now);
                         row.setCreatedBy(currentUser);
-                    } else {
-                        user.setId(row.getId());
-                        user.setUsername(row.getProperty("username", row.getId()));
-                        user.setFirstName(row.getProperty("firstName"));
-                        user.setLastName(row.getProperty("lastName"));
-                        user.setEmail(row.getProperty("email"));
-                        user.setActive("true".equals(active) || "active".equals(active) || "1".equals(active) ? 1 : 0);
-                        user.setLocale(row.getProperty("locale"));
-                        user.setTelephoneNumber(row.getProperty("telephone_number"));
-                        user.setDateModified(row.getDateModified());
-                        user.setModifiedBy(row.getModifiedBy());
-
-                        updatePassword(user, password, confirmPassword);
-//                        optRole.map(Collections::singleton).ifPresent(user::setRoles);
-
-                        if (organization != null) {
-                            setEmployment(user, organization);
-                        }
-
-                        userDao.updateUser(user);
-
-                        row.setDateModified(now);
-                        row.setModifiedBy(currentUser);
                     }
 
                     final FormRowSet result = new FormRowSet();

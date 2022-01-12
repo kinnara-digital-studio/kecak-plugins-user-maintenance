@@ -24,8 +24,20 @@
     ]
   },
   {
-    "title": "DataList",
+    "title": "List",
     "properties": [
+      {
+        "name": "rowCount",
+        "label" : "@@userview.datalistmenu.rowCount@@",
+        "type" : "checkbox",
+        "value" : "true",
+        "options" : [
+          {
+          "value" : "true",
+          "label" : ""
+          }
+        ]
+      },
       {
         "name": "pageSize",
         "label": "@@dbuilder.pageSize@@",
@@ -97,6 +109,13 @@
         "label" : "@@userview.inboxmenu.customFooter.list@@",
         "type" : "codeeditor",
         "mode" : "html"
+      },
+      {
+        "name" : "add-messageShowAfterComplete",
+        "label" : "@@userview.crudmenu.messageShownAfterSaved@@",
+        "type" : "textarea",
+        "cols" : "60",
+        "rows" : "3"
       }
     ]
   },
@@ -114,6 +133,13 @@
         "label" : "@@userview.inboxmenu.customFooter.list@@",
         "type" : "codeeditor",
         "mode" : "html"
+      },
+      {
+        "name" : "edit-messageShowAfterComplete",
+        "label" : "@@userview.crudmenu.messageShownAfterSaved@@",
+        "type" : "textarea",
+        "cols" : "60",
+        "rows" : "3"
       }
     ]
   }

@@ -101,9 +101,7 @@ public class ProfileMenu extends UserviewMenu {
         try {
             String formUrl = addParamToUrl(getUrl(), "_mode", mode) + "&_action=submit" + "&id=" + URLEncoder.encode(currentUser, "UTF-8");
 
-//			Form form = appService.viewDataForm(appDef.getId(), appDef.getVersion().toString(), "form_update_profile", null, "Save", "Cancel", "window", formData, formUrl, getUrl());
-
-			Form form = Utils.viewDataForm(formData, "Save", "Back", getUrl());
+			Form form = Utils.viewDataForm("userProfile", "Submit", "Cancel", formData, formUrl, getUrl(), mode);
 
             FormService formService = (FormService) applicationContext.getBean("formService");
             String formHtml = formService.generateElementHtml(form, formData);

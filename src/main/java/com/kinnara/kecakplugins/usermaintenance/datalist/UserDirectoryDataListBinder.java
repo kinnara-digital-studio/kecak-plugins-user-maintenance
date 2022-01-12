@@ -1,15 +1,8 @@
 package com.kinnara.kecakplugins.usermaintenance.datalist;
 
-import com.kinnarastudio.commons.Try;
-import com.kinnarastudio.commons.jsonstream.JSONCollectors;
-import com.kinnarastudio.commons.jsonstream.JSONStream;
 import org.joget.apps.app.service.AppUtil;
-import org.joget.apps.datalist.lib.FormRowDataListBinder;
 import org.joget.apps.datalist.model.*;
 import org.joget.directory.dao.UserDao;
-import org.joget.workflow.util.WorkflowUtil;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.springframework.context.ApplicationContext;
 
 import java.util.*;
@@ -24,7 +17,8 @@ public class UserDirectoryDataListBinder extends DataListBinderDefault {
                 new DataListColumn("username", "Username", true),
                 new DataListColumn("firstName", "First Name", true),
                 new DataListColumn("lastName", "Last Name", true),
-                new DataListColumn("email", "Email", true)
+                new DataListColumn("email", "Email", true),
+                new DataListColumn("telephone_number", "Telephone", true)
         };
     }
 
