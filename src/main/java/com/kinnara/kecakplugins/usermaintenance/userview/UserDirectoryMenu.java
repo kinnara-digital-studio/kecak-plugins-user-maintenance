@@ -1,20 +1,23 @@
 package com.kinnara.kecakplugins.usermaintenance.userview;
 
 import com.kinnara.kecakplugins.usermaintenance.datalist.UserDirectoryDataListBinder;
+import com.kinnara.kecakplugins.usermaintenance.form.UserDirectoryFormBinder;
+import com.kinnara.kecakplugins.usermaintenance.utils.Utils;
 import org.joget.apps.app.model.AppDefinition;
 import org.joget.apps.app.service.AppService;
 import org.joget.apps.app.service.AppUtil;
+import org.joget.apps.datalist.lib.HyperlinkDataListAction;
 import org.joget.apps.datalist.model.*;
 import org.joget.apps.form.lib.LinkButton;
-import org.joget.apps.form.model.Element;
-import org.joget.apps.form.model.Form;
-import org.joget.apps.form.model.FormAction;
-import org.joget.apps.form.model.FormData;
+import org.joget.apps.form.lib.SubmitButton;
+import org.joget.apps.form.model.*;
 import org.joget.apps.form.service.FormService;
 import org.joget.apps.form.service.FormUtil;
 import org.joget.apps.userview.model.UserviewMenu;
 import org.joget.commons.util.LogUtil;
 import org.joget.commons.util.StringUtil;
+import org.joget.plugin.base.Plugin;
+import org.joget.plugin.base.PluginManager;
 import org.joget.workflow.util.WorkflowUtil;
 import org.kecak.apps.userview.model.AceUserviewMenu;
 import org.kecak.apps.userview.model.BootstrapUserviewTheme;
@@ -28,6 +31,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -137,8 +141,8 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
 
         // handle list
         else {
-//            setProperty("customHeader", getPropertyListCustomHeader());
-            setProperty("customFooter", getPropertyString("list-customFooter"));
+            setProperty("customHeader", getPropertyListCustomHeader());
+            setProperty("customFooter", getPropertyListCustomFooter());
             viewList();
             return dataListFile;
         }
@@ -184,9 +188,32 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
         return new DataListAction[0];
     }
 
+    /**
+     * Get DataList row actions
+     *
+     * @return
+     */
     protected DataListAction[] getDataListRowActions() {
-        // TODO
-        return new DataListAction[0];
+        final List<DataListAction> dataListActionList = new ArrayList<>();
+        dataListActionList.add(getEditRowDataListAction());
+        return dataListActionList.toArray(new DataListAction[0]);
+    }
+
+    /**
+     * Generate "Edit" row button
+     *
+     * @return
+     */
+    protected DataListAction getEditRowDataListAction() {
+        final PluginManager pluginManager = (PluginManager)AppUtil.getApplicationContext().getBean("pluginManager");
+        final DataListAction action = (DataListAction)pluginManager.getPlugin(HyperlinkDataListAction.class.getName());
+
+        action.setProperty("label", getPropertyString("list-editLinkLabel") != null && getPropertyString("list-editLinkLabel").trim().length() > 0 ? getPropertyString("list-editLinkLabel") : "Edit");
+        action.setProperty("href", addParamToUrl(getUrl(), "_mode", "edit"));
+        action.setProperty("hrefParam", "id");
+        action.setProperty("hrefColumn", "id");
+
+        return action;
     }
 
     protected boolean isAddMode(String mode) {
@@ -240,7 +267,7 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
 
     protected String handleForm(String formFile, String unauthorizedFile) {
         if ("submit".equals(getRequestParameterString("_action"))) {
-            HttpServletRequest request = WorkflowUtil.getHttpServletRequest();
+            final HttpServletRequest request = WorkflowUtil.getHttpServletRequest();
             if (request != null && !"POST".equalsIgnoreCase(request.getMethod())) {
                 return unauthorizedFile;
             }
@@ -252,33 +279,31 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
     }
 
     protected void displayForm() {
-        String id = getRequestParameterString("id");
-        ApplicationContext ac = AppUtil.getApplicationContext();
-        FormService formService = (FormService) ac.getBean("formService");
-        Form form = null;
-        FormData formData = new FormData();
-        form = this.retrieveDataForm(formData, id);
-        if (form != null) {
-            String formHtml = formService.retrieveFormHtml(form, formData);
-            String formJson = formService.generateElementJson(form);
-            this.setProperty("view", "formView");
-            this.setProperty("formHtml", formHtml);
-            this.setProperty("formJson", formJson);
-        } else {
-            this.setProperty("headerTitle", "Form Unavailable");
-            this.setProperty("view", "assignmentFormUnavailable");
-            this.setProperty("formHtml", "Form Unavailable");
-        }
+        final String id = getRequestParameterString("id");
+        final ApplicationContext applicationContext = AppUtil.getApplicationContext();
+        final FormService formService = (FormService) applicationContext.getBean("formService");
+
+        final FormData formData = new FormData();
+        formData.setPrimaryKeyValue(id);
+
+        final Form form = Utils.viewDataForm(formData, "Save", "Back", getUrl());
+        String formHtml = formService.retrieveFormHtml(form, formData);
+        String formJson = formService.generateElementJson(form);
+        this.setProperty("view", "formView");
+        this.setProperty("formHtml", formHtml);
+        this.setProperty("formJson", formJson);
     }
 
     protected void submitForm() {
         String id = getRequestParameterString("id");
         ApplicationContext ac = AppUtil.getApplicationContext();
         FormService formService = (FormService) ac.getBean("formService");
-        Form form;
-        FormData formData = new FormData();
-        form = retrieveDataForm(formData, id);
-        if ((form = submitDataForm(formData, form)) != null) {
+
+        final FormData formData = new FormData();
+        formData.setPrimaryKeyValue(id);
+
+        final Form form = submitDataForm(formData, retrieveDataForm(formData));
+        if (form != null) {
             String formHtml;
             Map errors = formData.getFormErrors();
             int errorCount = 0;
@@ -343,87 +368,59 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
         }
     }
 
-    protected Form retrieveDataForm(FormData formData, String primaryKeyValue) {
-        Form form = null;
-        ApplicationContext ac = AppUtil.getApplicationContext();
-        AppService appService = (AppService) ac.getBean("appService");
-        FormService formService = (FormService) ac.getBean("formService");
-        AppDefinition appDef = AppUtil.getCurrentAppDefinition();
-        String formId = "";
-        String mode = getRequestParameterString("_mode");
-        if (isAddMode(mode)) {
-            formId = getPropertyString("addFormId");
-        } else if (isEditMode(mode)) {
-            formId = getPropertyString("editFormId");
-        }
-        formData.setPrimaryKeyValue(primaryKeyValue);
-        formData = formService.retrieveFormDataFromRequestMap(formData, getRequestParameters());
+    protected String getPropertyListCustomHeader() {
+        return AppUtil.processHashVariable(getPropertyString("list-customHeader"), null, null, null);
+    }
+
+    protected String getPropertyListCustomFooter() {
+        return AppUtil.processHashVariable(getPropertyString("list-customFooter"), null, null, null);
+    }
+
+    protected Form retrieveDataForm(final FormData formData) {
+        final ApplicationContext ac = AppUtil.getApplicationContext();
+        final AppService appService = (AppService) ac.getBean("appService");
+        final FormService formService = (FormService) ac.getBean("formService");
+        final AppDefinition appDef = AppUtil.getCurrentAppDefinition();
+        final PluginManager pluginManager = (PluginManager) ac.getBean("pluginManager");
+
+        final String mode = getRequestParameterString("_mode");
+
+        formService.retrieveFormDataFromRequestMap(formData, getRequestParameters());
+
         if (getPropertyString("keyName") != null && getPropertyString("keyName").trim().length() > 0 && getKey() != null) {
             formData.addRequestParameterValues("fk_" + getPropertyString("keyName"), new String[]{getKey()});
         }
+
         String formUrl = addParamToUrl(getUrl(), "_mode", mode) + "&_action=submit";
+
+        final String primaryKeyValue = formData.getPrimaryKeyValue();
         if (primaryKeyValue != null) {
             try {
-                formUrl = formUrl + "&id=" + URLEncoder.encode(primaryKeyValue, "UTF-8");
-            } catch (UnsupportedEncodingException ex) {
-                // empty catch block
-            }
-        }
-        String submitLabel = "Save";
-        String cancelLabel = null;
-        if (isAddMode(mode)) {
-            if (getPropertyString("add-saveButtonLabel") != null && getPropertyString("add-saveButtonLabel").trim().length() > 0) {
-                submitLabel = getPropertyString("add-saveButtonLabel");
-            }
-            cancelLabel = "Cancel";
-            if (getPropertyString("add-cancelButtonLabel") != null && getPropertyString("add-cancelButtonLabel").trim().length() > 0) {
-                cancelLabel = getPropertyString("add-cancelButtonLabel");
-            }
-        } else if (isEditMode(mode)) {
-            if (getPropertyString("edit-saveButtonLabel") != null && getPropertyString("edit-saveButtonLabel").trim().length() > 0) {
-                submitLabel = getPropertyString("edit-saveButtonLabel");
-            }
-            cancelLabel = "Back";
-            if (getPropertyString("edit-backButtonLabel") != null && getPropertyString("edit-backButtonLabel").trim().length() > 0) {
-                cancelLabel = getPropertyString("edit-backButtonLabel");
+                formUrl += ("&id=" + URLEncoder.encode(primaryKeyValue, "UTF-8"));
+            } catch (UnsupportedEncodingException ignored) {
+                formUrl += ("&id=" + primaryKeyValue);
             }
         }
 
-        form = appService.viewDataForm(appDef.getId(), appDef.getVersion().toString(), formId, null, submitLabel, cancelLabel, "window", formData, formUrl, getUrl());
+        final String submitLabel = "Save";
+        final String cancelLabel = isAddMode(mode) ? "Cancel" : "Back";
 
-        if (form != null) {
-            String idValue;
-            Element el = FormUtil.findElement("id", form, formData);
-            if (el != null && (idValue = FormUtil.getElementPropertyValue(el, formData)) != null && !idValue.trim().isEmpty() && !"".equals(formData.getRequestParameter("_FORM_META_ORIGINAL_ID"))) {
-                el.setProperty("readonly", "true");
-            }
+//        final Form form = appService.viewDataForm(appDef.getId(), appDef.getVersion().toString(), formId, null, submitLabel, cancelLabel, "window", formData, formUrl, getUrl());
+        final Form form = new Form();
 
-            Object[] moreActions = (Object[]) getProperty("edit-moreActions");
-            if (isEditMode(mode) && moreActions != null && moreActions.length > 0) {
-                ArrayList<FormAction> formActionList = new ArrayList<>();
-                for (Object o : moreActions) {
-                    HashMap action = (HashMap) o;
-                    LinkButton button = new LinkButton();
-                    button.setProperty("id", ("more_action_" + action.get("label").toString().replace(" ", "_")));
-                    button.setProperty("label", action.get("label").toString());
-                    String url = getRedirectUrl(action.get("href").toString(), form, formData, action.get("hrefParam").toString(), action.get("hrefColumn").toString());
-                    button.setProperty("url", url);
-                    button.setProperty("confirmation", action.get("confirmation").toString());
-                    formActionList.add(button);
-                }
-                FormAction[] formActions = formActionList.toArray(new FormAction[0]);
-//                form = decorateFormMoreActions(form, formActions);
-            }
-            if (getPropertyString("keyName") != null && getPropertyString("keyName").trim().length() > 0 && getKey() != null && (el = FormUtil.findElement((String) getPropertyString("keyName"), (Element) form, (FormData) formData)) != null) {
-                FormUtil.setReadOnlyProperty(el);
-            }
-        }
-        if (isEditMode(mode)) {
-            Boolean readonly = "yes".equalsIgnoreCase(getPropertyString("edit-readonly"));
-            Boolean readonlyLabel = "true".equalsIgnoreCase(getPropertyString("edit-readonlyLabel"));
-            if (readonly || readonlyLabel) {
-                FormUtil.setReadOnlyProperty(form, readonly, readonlyLabel);
-            }
+        final UserDirectoryFormBinder formBinder = new UserDirectoryFormBinder();
+        form.setLoadBinder(formBinder);
+        form.setStoreBinder(formBinder);
+
+        final Element submitButton = (Element) pluginManager.getPlugin(SubmitButton.class.getName());
+        submitButton.setProperty(FormUtil.PROPERTY_ID, "submit");
+        submitButton.setProperty(FormUtil.PROPERTY_LABEL,"Save");
+        form.addAction((FormAction) submitButton, formData);
+
+        String idValue;
+        Element el = FormUtil.findElement("id", form, formData);
+        if (el != null && (idValue = FormUtil.getElementPropertyValue(el, formData)) != null && !idValue.trim().isEmpty() && !"".equals(formData.getRequestParameter("_FORM_META_ORIGINAL_ID"))) {
+            FormUtil.setReadOnlyProperty(el);
         }
         return form;
     }

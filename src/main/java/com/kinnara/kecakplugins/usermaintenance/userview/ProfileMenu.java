@@ -1,23 +1,13 @@
 package com.kinnara.kecakplugins.usermaintenance.userview;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 import com.kinnara.kecakplugins.usermaintenance.form.UserDirectoryFormBinder;
+import com.kinnara.kecakplugins.usermaintenance.utils.Utils;
 import org.joget.apps.app.model.AppDefinition;
 import org.joget.apps.app.service.AppService;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.lib.SubmitButton;
 import org.joget.apps.form.lib.TextField;
-import org.joget.apps.form.model.Element;
-import org.joget.apps.form.model.Form;
-import org.joget.apps.form.model.FormAction;
-import org.joget.apps.form.model.FormData;
+import org.joget.apps.form.model.*;
 import org.joget.apps.form.service.FormService;
 import org.joget.apps.form.service.FormUtil;
 import org.joget.apps.userview.model.UserviewMenu;
@@ -28,134 +18,113 @@ import org.joget.workflow.model.service.WorkflowManager;
 import org.kecak.apps.form.service.FormDataUtil;
 import org.springframework.context.ApplicationContext;
 
-public class ProfileMenu extends UserviewMenu{
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.*;
+import java.util.stream.Collectors;
 
-	@Override
-	public String getLabel() {
-		return "User Profile";
-	}
+public class ProfileMenu extends UserviewMenu {
 
-	@Override
-	public String getClassName() {
-		return getClass().getName();
-	}
+    @Override
+    public String getLabel() {
+        return "User Profile";
+    }
 
-	@Override
-	public String getName() {
-		return getLabel();
-	}
+    @Override
+    public String getClassName() {
+        return getClass().getName();
+    }
 
-	@Override
-	public String getVersion() {
-		return getClass().getPackage().getImplementationVersion();
-	}
+    @Override
+    public String getName() {
+        return getLabel();
+    }
 
-	@Override
-	public String getDescription() {
-		return getClass().getPackage().getImplementationTitle();
-	}
+    @Override
+    public String getVersion() {
+        return getClass().getPackage().getImplementationVersion();
+    }
 
-	@Override
-	public String getCategory() {
-		return "Kecak";
-	}
+    @Override
+    public String getDescription() {
+        return getClass().getPackage().getImplementationTitle();
+    }
 
-	@Override
-	public String getIcon() {
-		return "/plugin/" + getClassName() + "/images/grid_icon.gif";
-	}
+    @Override
+    public String getCategory() {
+        return "Kecak";
+    }
 
-
-	@Override
-	public boolean isHomePageSupported() {
-		return true;
-	}
-
-	@Override
-	public String getDecoratedMenu() {
-		return null;
-	}
-
-	@Override
-	public String getPropertyOptions() {
-		return AppUtil.readPluginResource(getClassName(), "/properties/profileMenu.json", null, true, "/messages/profileMenu");
-	}
-
-	@Override
-	public String getRenderPage() {
-		return null;
-	}
-
-	@Override
-	public String getJspPage() {
-		final ApplicationContext applicationContext = AppUtil.getApplicationContext();
-		final AppDefinition appDefinition = AppUtil.getCurrentAppDefinition();
-		final PluginManager pluginManager = (PluginManager) applicationContext.getBean("pluginManager");
-		AppService appService = (AppService) applicationContext.getBean("appService");
-		AppDefinition appDef = AppUtil.getCurrentAppDefinition();
-		final Map<String, Object> dataModel = new HashMap<>();
+    @Override
+    public String getIcon() {
+        return "/plugin/" + getClassName() + "/images/grid_icon.gif";
+    }
 
 
-		WorkflowManager workflowManager = (WorkflowManager) applicationContext.getBean("workflowManager");
-		String currentUser = workflowManager.getWorkflowUserManager().getCurrentUsername();
+    @Override
+    public boolean isHomePageSupported() {
+        return true;
+    }
 
-		FormData formData = new FormData();
-		formData.setPrimaryKeyValue(currentUser);
+    @Override
+    public String getDecoratedMenu() {
+        return null;
+    }
 
-		String mode = "update";
-		try {
-			String formUrl = addParamToUrl(getUrl(), "_mode", mode) + "&_action=submit"+ "&id=" + URLEncoder.encode(currentUser, "UTF-8");
+    @Override
+    public String getPropertyOptions() {
+        return AppUtil.readPluginResource(getClassName(), "/properties/profileMenu.json", null, true, "/messages/profileMenu");
+    }
+
+    @Override
+    public String getRenderPage() {
+        return null;
+    }
+
+    @Override
+    public String getJspPage() {
+        final ApplicationContext applicationContext = AppUtil.getApplicationContext();
+        final AppDefinition appDefinition = AppUtil.getCurrentAppDefinition();
+        final PluginManager pluginManager = (PluginManager) applicationContext.getBean("pluginManager");
+        AppService appService = (AppService) applicationContext.getBean("appService");
+        AppDefinition appDef = AppUtil.getCurrentAppDefinition();
+        final Map<String, Object> dataModel = new HashMap<>();
+
+
+        WorkflowManager workflowManager = (WorkflowManager) applicationContext.getBean("workflowManager");
+        String currentUser = workflowManager.getWorkflowUserManager().getCurrentUsername();
+
+        FormData formData = new FormData();
+        formData.setPrimaryKeyValue(currentUser);
+
+        String mode = "update";
+        try {
+            String formUrl = addParamToUrl(getUrl(), "_mode", mode) + "&_action=submit" + "&id=" + URLEncoder.encode(currentUser, "UTF-8");
 
 //			Form form = appService.viewDataForm(appDef.getId(), appDef.getVersion().toString(), "form_update_profile", null, "Save", "Cancel", "window", formData, formUrl, getUrl());
-			Form form = new Form();
-			form.setProperty("id", "form_update_profile");
-			form.setLoadBinder(new UserDirectoryFormBinder());
-			form.setStoreBinder(new UserDirectoryFormBinder());
-			
-			Element submitButton = (Element) pluginManager.getPlugin(SubmitButton.class.getName());
-			submitButton.setProperty(FormUtil.PROPERTY_ID, "submit");
-			submitButton.setProperty(FormUtil.PROPERTY_LABEL,"Save");
-			form.addAction((FormAction) submitButton, formData);
 
-			final Collection<String> defaultFields = Arrays.asList(
-					"firstName","lastName","email","telephoneNumber","password","confirmPassword","oldPassword");
+			Form form = Utils.viewDataForm(formData, "Save", "Back", getUrl());
 
-			final Collection<Element> children = defaultFields.stream()
-					.map(s -> {
-						final TextField textField = new TextField();
-						textField.setProperty(FormUtil.PROPERTY_ID, s);
-						textField.setProperty(FormUtil.PROPERTY_LABEL, s);
-						return textField;
-					})
-					.collect(Collectors.toList());
+            FormService formService = (FormService) applicationContext.getBean("formService");
+            String formHtml = formService.generateElementHtml(form, formData);
+            setProperty("formHtml", formHtml);
 
-			FormDataUtil.elementStream(form, formData)
-			.filter(e -> "section-actions".equals(e.getPropertyString("id")))
-			.findFirst()
-			.ifPresent(children::add);
+            String formJson = formService.generateElementJson(form);
+            this.setProperty("formJson", formJson);
 
-			form.setChildren(children);
+            setProperty("view", "formView");
+        } catch (UnsupportedEncodingException e1) {
+            LogUtil.error(this.getClassName(), e1, e1.getMessage());
+        }
+        return "userview/plugin/form.jsp";
+    }
 
-			FormService formService = (FormService) applicationContext.getBean("formService");
-			String formHtml = formService.generateElementHtml(form, formData);
-			setProperty("formHtml", formHtml);
+    protected String addParamToUrl(String url, String name, String value) {
+        return StringUtil.addParamsToUrl(url, name, value);
+    }
 
-			String formJson = formService.generateElementJson(form);
-			this.setProperty("formJson", formJson);
-
-			setProperty("view", "formView");
-		} catch (UnsupportedEncodingException e1) {
-			LogUtil.error(this.getClassName(), e1, e1.getMessage());
-		}
-		return "userview/plugin/form.jsp";
-	}
-
-	protected String addParamToUrl(String url, String name, String value) {
-		return StringUtil.addParamsToUrl(url, name, value);
-	}
-
-	protected <U, V extends U> U ifEmptyThen(V value, U ifEmpty) {
-		return value == null || value.toString().isEmpty() ? ifEmpty : value;
-	}
+    protected <U, V extends U> U ifEmptyThen(V value, U ifEmpty) {
+        return value == null || value.toString().isEmpty() ? ifEmpty : value;
+    }
 
 }

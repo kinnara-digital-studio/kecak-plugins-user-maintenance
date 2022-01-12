@@ -68,6 +68,52 @@
         "required" : "false",
         "type" : "selectbox",
         "options_callback" : "DatalistBuilder.getColumnOptions"
+      },
+      {
+        "name" : "list-customHeader",
+        "label" : "@@userview.inboxmenu.customHeader.list@@",
+        "type" : "codeeditor",
+        "mode" : "html"
+      },
+      {
+        "name" : "list-customFooter",
+        "label" : "@@userview.inboxmenu.customFooter.list@@",
+        "type" : "codeeditor",
+        "mode" : "html"
+      }
+    ]
+  },
+  {
+    "title": "Form Add",
+    "properties": [
+      {
+        "name" : "add-customHeader",
+        "label" : "@@userview.inboxmenu.customHeader.list@@",
+        "type" : "codeeditor",
+        "mode" : "html"
+      },
+      {
+        "name" : "add-customFooter",
+        "label" : "@@userview.inboxmenu.customFooter.list@@",
+        "type" : "codeeditor",
+        "mode" : "html"
+      }
+    ]
+  },
+  {
+    "title": "Form Edit",
+    "properties": [
+      {
+        "name" : "edit-customHeader",
+        "label" : "@@userview.inboxmenu.customHeader.list@@",
+        "type" : "codeeditor",
+        "mode" : "html"
+      },
+      {
+        "name" : "edit-customFooter",
+        "label" : "@@userview.inboxmenu.customFooter.list@@",
+        "type" : "codeeditor",
+        "mode" : "html"
       }
     ]
   }
