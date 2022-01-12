@@ -15,7 +15,8 @@ public class Activator implements BundleActivator {
 
         //Register plugin here
         registrationList.add(context.registerService(ResetPasswordTool.class.getName(), new ResetPasswordTool(), null));
-    }
+        registrationList.add(context.registerService(ProfileMenu.class.getName(), new ProfileMenu(), null));
+	}
 
     public void stop(BundleContext context) {
         for (ServiceRegistration registration : registrationList) {
