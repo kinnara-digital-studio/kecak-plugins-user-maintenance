@@ -2,6 +2,9 @@ package com.kinnara.kecakplugins.usermaintenance;
 
 import java.util.ArrayList;
 import java.util.Collection;
+
+import com.kinnara.kecakplugins.usermaintenance.process.ResetPasswordTool;
+import com.kinnara.kecakplugins.usermaintenance.userview.UserDirectoryMenu;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -14,7 +17,9 @@ public class Activator implements BundleActivator {
         registrationList = new ArrayList<ServiceRegistration>();
 
         //Register plugin here
+        registrationList.add(context.registerService(UserDirectoryMenu.class.getName(), new UserDirectoryMenu(), null));
         registrationList.add(context.registerService(ResetPasswordTool.class.getName(), new ResetPasswordTool(), null));
+        registrationList.add(context.registerService(com.kinnara.kecakplugins.usermaintenance.ResetPasswordTool.class.getName(), new com.kinnara.kecakplugins.usermaintenance.ResetPasswordTool(), null));
     }
 
     public void stop(BundleContext context) {

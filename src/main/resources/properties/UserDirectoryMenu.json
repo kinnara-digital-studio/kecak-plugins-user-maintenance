@@ -1,0 +1,74 @@
+[
+  {
+    "title": "User Directory Menu",
+    "properties": [
+      {
+        "name" : "id",
+        "label" : "ID",
+        "type" : "hidden"
+      },
+      {
+        "name" : "customId",
+        "label" : "@@userview.crudmenu.customId@@",
+        "type" : "textfield",
+        "regex_validation" : "^[a-zA-Z0-9_]+$",
+        "validation_message" : "@@userview.crudmenu.invalidId@@"
+      },
+      {
+        "name" : "label",
+        "label" : "@@userview.crudmenu.label@@",
+        "type" : "textfield",
+        "required" : "True",
+        "value" : "User Directory"
+      }
+    ]
+  },
+  {
+    "title": "DataList",
+    "properties": [
+      {
+        "name": "pageSize",
+        "label": "@@dbuilder.pageSize@@",
+        "type": "selectbox",
+        "required": "true",
+        "value" : "0",
+        "options" : [
+          {"label" : "@@dbuilder.pageSize.default@@", "value" : "0"},
+          {"label" : "10", "value" : "10"},
+          {"label" : "20", "value" : "20"},
+          {"label" : "30", "value" : "30"},
+          {"label" : "40", "value" : "40"},
+          {"label" : "50", "value" : "50"},
+          {"label" : "100", "value" : "100"}
+        ]
+      },
+      {
+        "label" : "@@dbuilder.order@@",
+        "name"  : "order",
+        "required" : "false",
+        "type" : "selectbox",
+        "options" : [
+          {
+            "label" : "",
+            "value" : ""
+          },
+          {
+            "label" : "@@dbuilder.order.asc@@",
+            "value" : "2"
+          },
+          {
+            "label" : "@@dbuilder.order.desc@@",
+            "value" : "1"
+          }
+        ]
+      },
+      {
+        "label" : "@@dbuilder.orderBy@@",
+        "name"  : "orderBy",
+        "required" : "false",
+        "type" : "selectbox",
+        "options_callback" : "DatalistBuilder.getColumnOptions"
+      }
+    ]
+  }
+]
