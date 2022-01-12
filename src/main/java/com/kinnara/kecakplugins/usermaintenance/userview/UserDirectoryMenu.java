@@ -16,6 +16,8 @@ import org.joget.apps.userview.model.UserviewMenu;
 import org.joget.commons.util.LogUtil;
 import org.joget.commons.util.StringUtil;
 import org.joget.workflow.util.WorkflowUtil;
+import org.kecak.apps.userview.model.AceUserviewMenu;
+import org.kecak.apps.userview.model.BootstrapUserviewTheme;
 import org.springframework.context.ApplicationContext;
 
 import javax.annotation.Nonnull;
@@ -31,7 +33,7 @@ import java.util.Map;
 /**
  * @author aristo
  */
-public class UserDirectoryMenu extends UserviewMenu {
+public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
     public final static String DATALIST_ID = "userDirectory";
     public final static String DATALIST_NAME = "User Directory";
     public final static String DATALIST_DESCRIPTION = "Manage users";
@@ -107,6 +109,21 @@ public class UserDirectoryMenu extends UserviewMenu {
         return getJspPage("userview/plugin/datalist.jsp", "userview/plugin/form.jsp", "userview/plugin/unauthorized.jsp");
     }
 
+    @Override
+    public String getAceJspPage(BootstrapUserviewTheme bootstrapUserviewTheme) {
+        return getJspPage(bootstrapUserviewTheme.getDataListJsp(), bootstrapUserviewTheme.getFormJsp(), bootstrapUserviewTheme.getUnauthorizedJsp());
+    }
+
+    @Override
+    public String getAceRenderPage() {
+        return getRenderPage();
+    }
+
+    @Override
+    public String getAceDecoratedMenu() {
+        return getDecoratedMenu();
+    }
+
     protected String getJspPage(String dataListFile, String formFile, String unauthorizedFile) {
         final String mode = getRequestParameterString("_mode");
 
@@ -123,8 +140,7 @@ public class UserDirectoryMenu extends UserviewMenu {
 //            setProperty("customHeader", getPropertyListCustomHeader());
             setProperty("customFooter", getPropertyString("list-customFooter"));
             viewList();
-            return null;
-//            return listFile;
+            return dataListFile;
         }
     }
 
@@ -139,22 +155,18 @@ public class UserDirectoryMenu extends UserviewMenu {
         dataList.setShowPageSizeSelector(true);
         dataList.setDefaultOrder(getPropertyOrder());
         dataList.setDefaultSortColumn(getPropertyOrderBy());
-        dataList.setColumns(getDataListColumns());
-        dataList.setBinder(getDataListBinder());
+
+        {
+            final DataListBinder binder = getDataListBinder();
+            dataList.setBinder(binder);
+            dataList.setColumns(binder.getColumns());
+        }
+
         dataList.setActions(getDataListActions());
         dataList.setRowActions(getDataListRowActions());
         dataList.setFilters(getDataListFilters());
 
         return dataList;
-    }
-
-    protected DataListColumn[] getDataListColumns() {
-        return new DataListColumn[] {
-                getDataListColumn("id", "Username"),
-                getDataListColumn("firstName", "First Name"),
-                getDataListColumn("lastName", "Last Name"),
-                getDataListColumn("email", "Email")
-        };
     }
 
     protected DataListBinder getDataListBinder() {
@@ -177,10 +189,6 @@ public class UserDirectoryMenu extends UserviewMenu {
         return new DataListAction[0];
     }
 
-    protected DataListColumn getDataListColumn(String columnId, String columnName) {
-        return new DataListColumn(columnId, columnName, true);
-    }
-
     protected boolean isAddMode(String mode) {
         return "add".equals(mode);
     }
@@ -196,27 +204,33 @@ public class UserDirectoryMenu extends UserviewMenu {
 //            dataList.setSelectionType(getPropertyString("selectionType"));
 //            dataList.setCheckboxPosition(getPropertyString("checkboxPosition"));
 
-            final DataListActionResult ac = dataList.getActionResult();
-            if (ac != null) {
-                if (ac.getMessage() != null && !ac.getMessage().isEmpty()) {
-                    this.setAlertMessage(ac.getMessage());
-                }
-                if (ac.getType() != null && "REDIRECT".equals(ac.getType()) && ac.getUrl() != null && !ac.getUrl().isEmpty()) {
-                    if ("REFERER".equals(ac.getUrl())) {
-                        HttpServletRequest request = WorkflowUtil.getHttpServletRequest();
-                        if (request != null && request.getHeader("Referer") != null) {
-                            this.setRedirectUrl(request.getHeader("Referer"));
-                        } else {
-                            this.setRedirectUrl("REFERER");
-                        }
+            // set current datalist
+            setProperty("dataList", dataList);
+
+            final DataListActionResult actionResult = dataList.getActionResult();
+            if (actionResult == null) {
+                return;
+            }
+
+            if (actionResult.getMessage() != null && !actionResult.getMessage().isEmpty()) {
+                this.setAlertMessage(actionResult.getMessage());
+            }
+
+            if (actionResult.getType() != null && "REDIRECT".equals(actionResult.getType()) && actionResult.getUrl() != null && !actionResult.getUrl().isEmpty()) {
+                if ("REFERER".equals(actionResult.getUrl())) {
+                    HttpServletRequest request = WorkflowUtil.getHttpServletRequest();
+                    if (request != null && request.getHeader("Referer") != null) {
+                        this.setRedirectUrl(request.getHeader("Referer"));
                     } else {
-                        this.setRedirectUrl(ac.getUrl());
+                        this.setRedirectUrl("REFERER");
                     }
+                } else {
+                    this.setRedirectUrl(actionResult.getUrl());
                 }
             }
-            this.setProperty("dataList", dataList);
+
         } catch (Exception ex) {
-            StringWriter out = new StringWriter();
+            final StringWriter out = new StringWriter();
             ex.printStackTrace(new PrintWriter(out));
             String message = ex.toString();
             message = message + "\r\n<pre class=\"stacktrace\">" + out.getBuffer() + "</pre>";

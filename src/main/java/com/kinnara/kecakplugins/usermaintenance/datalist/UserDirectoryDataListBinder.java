@@ -5,9 +5,7 @@ import com.kinnarastudio.commons.jsonstream.JSONCollectors;
 import com.kinnarastudio.commons.jsonstream.JSONStream;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.datalist.lib.FormRowDataListBinder;
-import org.joget.apps.datalist.model.DataList;
-import org.joget.apps.datalist.model.DataListCollection;
-import org.joget.apps.datalist.model.DataListFilterQueryObject;
+import org.joget.apps.datalist.model.*;
 import org.joget.directory.dao.UserDao;
 import org.joget.workflow.util.WorkflowUtil;
 import org.json.JSONArray;
@@ -18,7 +16,23 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class UserDirectoryDataListBinder extends FormRowDataListBinder {
+public class UserDirectoryDataListBinder extends DataListBinderDefault {
+    @Override
+    public DataListColumn[] getColumns() {
+        return new DataListColumn[] {
+                new DataListColumn("id", "ID", true),
+                new DataListColumn("username", "Username", true),
+                new DataListColumn("firstName", "First Name", true),
+                new DataListColumn("lastName", "Last Name", true),
+                new DataListColumn("email", "Email", true)
+        };
+    }
+
+    @Override
+    public String getPrimaryKeyColumnName() {
+        return "id";
+    }
+
     @Override
     public DataListCollection<Map<String, Object>> getData(DataList dataList, Map map, DataListFilterQueryObject[] filterQueryObjects, String sort, Boolean desc, Integer start, Integer rows) {
         final ApplicationContext applicationContext = AppUtil.getApplicationContext();
@@ -80,19 +94,7 @@ public class UserDirectoryDataListBinder extends FormRowDataListBinder {
 
     @Override
     public String getPropertyOptions() {
-
-        Stream<JSONObject> stream1 = Optional.ofNullable(super.getPropertyOptions())
-                .map(Try.onFunction(JSONArray::new))
-                .map(json -> JSONStream.of(json, Try.onBiFunction(JSONArray::getJSONObject)))
-                .orElseGet(Stream::empty);
-
-        String str = AppUtil.readPluginResource(getClass().getName(), "/properties/UserDirectoryDataListBinder.json");
-        Stream<JSONObject> stream2 = Optional.of(str)
-                .map(Try.onFunction(JSONArray::new))
-                .map(json -> JSONStream.of(json, Try.onBiFunction(JSONArray::getJSONObject)))
-                .orElseGet(Stream::empty);
-
-        return Stream.concat(stream1, stream2).collect(JSONCollectors.toJSONArray()).toString();
+        return AppUtil.readPluginResource(getClass().getName(), "/properties/UserDirectoryDataListBinder.json");
     }
 
     protected boolean isHideAdminRole() {
@@ -111,25 +113,9 @@ public class UserDirectoryDataListBinder extends FormRowDataListBinder {
 
     }
 
-    @Override
     protected DataListFilterQueryObject getCriteria(Map properties, DataListFilterQueryObject[] filterQueryObjects) {
-        final DataListFilterQueryObject criteria = super.getCriteria(properties, filterQueryObjects);
-        criteria.setQuery(criteria.getQuery().replaceAll("customProperties", "e"));
-
-        if(isHideAdminRole()) {
-            final String query = criteria.getQuery();
-            criteria.setQuery(query + (query.isEmpty() ? " where " : " and ") + " e.id not in (select u.id from User u join u.roles r where r.id = ?)");
-
-            final List<String> values = Optional.of(criteria)
-                    .map(DataListFilterQueryObject::getValues)
-                    .map(Arrays::stream)
-                    .orElseGet(Stream::empty)
-                    .collect(Collectors.toList());
-
-            values.add(WorkflowUtil.ROLE_ADMIN);
-            criteria.setValues(values.toArray(new String[0]));
-        }
-
+        final DataListFilterQueryObject criteria = new DataListFilterQueryObject();
+        criteria.setQuery("WHERE 1 = 1");
         return criteria;
     }
 }

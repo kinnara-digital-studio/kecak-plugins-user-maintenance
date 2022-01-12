@@ -74,7 +74,7 @@ public class ProfileMenu extends UserviewMenu{
 	
 	@Override
 	public String getPropertyOptions() {
-		return AppUtil.readPluginResource(getClassName(), "/properties/profileMenu.json", null, false, "/messages/profileMenu");
+		return AppUtil.readPluginResource(getClassName(), "/properties/profileMenu.json", null, true, "/messages/profileMenu");
 	}
 	
 	@Override
