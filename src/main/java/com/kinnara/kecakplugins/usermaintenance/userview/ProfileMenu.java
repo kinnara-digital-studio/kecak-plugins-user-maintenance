@@ -97,7 +97,7 @@ public class ProfileMenu extends UserviewMenu {
         FormData formData = new FormData();
         formData.setPrimaryKeyValue(currentUser);
 
-        String mode = "update";
+        String mode = "edit";
         try {
             String formUrl = addParamToUrl(getUrl(), "_mode", mode) + "&_action=submit" + "&id=" + URLEncoder.encode(currentUser, "UTF-8");
 
