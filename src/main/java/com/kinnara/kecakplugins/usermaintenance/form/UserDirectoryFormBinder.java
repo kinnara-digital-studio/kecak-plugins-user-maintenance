@@ -8,10 +8,8 @@ import org.joget.apps.form.service.FormUtil;
 import org.joget.commons.util.HashSalt;
 import org.joget.commons.util.LogUtil;
 import org.joget.commons.util.PasswordGeneratorUtil;
-import org.joget.directory.dao.EmploymentDao;
-import org.joget.directory.dao.OrganizationDao;
-import org.joget.directory.dao.RoleDao;
-import org.joget.directory.dao.UserDao;
+import org.joget.commons.util.SecurityUtil;
+import org.joget.directory.dao.*;
 import org.joget.directory.model.Employment;
 import org.joget.directory.model.Organization;
 import org.joget.directory.model.User;
@@ -241,21 +239,44 @@ public class UserDirectoryFormBinder extends DefaultFormBinder implements FormLo
     }
 
     protected void updatePassword(User user, String password, String confirmPassword) {
+        final ApplicationContext applicationContext = AppUtil.getApplicationContext();
+        final UserSaltDao userSaltDao = (UserSaltDao) applicationContext.getBean("userSaltDao");
         final UserSecurity us = DirectoryUtil.getUserSecurity();
-        final UserSalt userSalt = new UserSalt();
+        final String plainPassword = SecurityUtil.decrypt(password);
+        final String plainConfirmPassword = SecurityUtil.decrypt(confirmPassword);
 
-        if (!password.isEmpty() && password.equals(confirmPassword)) {
+        if (!plainPassword.isEmpty() && plainPassword.equals(plainConfirmPassword)) {
             if (us != null) {
                 user.setPassword(us.encryptPassword(user.getUsername(), password));
             } else {
-                try {
-                    HashSalt hashSalt = PasswordGeneratorUtil.createNewHashWithSalt(password);
-                    userSalt.setId(UUID.randomUUID().toString());
-                    userSalt.setRandomSalt(hashSalt.getSalt());
+                final UserSalt currentUserSalt = Optional.of(user)
+                        .map(User::getId)
+                        .map(userSaltDao::getUserSaltByUserId)
+                        .orElseGet(Try.onSupplier(() -> {
+                            final HashSalt hashSalt = PasswordGeneratorUtil.createNewHashWithSalt(plainPassword);
 
-                    user.setPassword(hashSalt.getHash());
-                } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-                    LogUtil.error(getClassName(), e, e.getMessage());
+                            final UserSalt userSalt = new UserSalt();
+                            userSalt.setUserId(user.getId());
+                            userSalt.setId(UUID.randomUUID().toString());
+                            userSalt.setRandomSalt(hashSalt.getSalt());
+
+                            final Date date = new Date();
+                            userSalt.setDateCreated(date);
+                            userSalt.setDateModified(date);
+
+                            final String currentUser = WorkflowUtil.getCurrentUsername();
+                            userSalt.setCreatedBy(currentUser);
+                            userSalt.setModifiedBy(currentUser);
+
+                            userSaltDao.addUserSalt(userSalt);
+
+                            user.setPassword(hashSalt.getHash());
+
+                            return userSalt;
+                        }));
+
+                if(currentUserSalt == null) {
+                    LogUtil.warn(getClassName(), "Error generating setting password for user [" + user.getId() + "]");
                 }
             }
         }
