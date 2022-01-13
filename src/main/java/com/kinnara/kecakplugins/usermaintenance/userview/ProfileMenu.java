@@ -143,10 +143,13 @@ public class ProfileMenu extends UserviewMenu {
 
 	private void submitForm() throws UnsupportedEncodingException {
 		ApplicationContext applicationContext = AppUtil.getApplicationContext();
-		FormData formData = new FormData();
-		String mode = "edit";
 		WorkflowManager workflowManager = (WorkflowManager) applicationContext.getBean("workflowManager");
         String currentUser = workflowManager.getWorkflowUserManager().getCurrentUsername();
+        
+		FormData formData = new FormData();
+		formData.setPrimaryKeyValue(currentUser);
+		String mode = "edit";
+		
         String formUrl = addParamToUrl(getUrl(), "_mode", mode) + "&_action=submit" + "&id=" + URLEncoder.encode(currentUser, "UTF-8");
 
 		Form form = Utils.viewDataForm("userProfile", "Submit", "Cancel", formData, formUrl, getUrl(), mode);
