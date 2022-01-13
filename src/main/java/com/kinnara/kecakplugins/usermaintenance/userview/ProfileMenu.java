@@ -1,27 +1,22 @@
 package com.kinnara.kecakplugins.usermaintenance.userview;
 
-import com.kinnara.kecakplugins.usermaintenance.form.UserDirectoryFormBinder;
 import com.kinnara.kecakplugins.usermaintenance.utils.Utils;
-import org.joget.apps.app.model.AppDefinition;
-import org.joget.apps.app.service.AppService;
-import org.joget.apps.app.service.AppUtil;
-import org.joget.apps.form.lib.SubmitButton;
-import org.joget.apps.form.lib.TextField;
-import org.joget.apps.form.model.*;
-import org.joget.apps.form.service.FormService;
-import org.joget.apps.form.service.FormUtil;
-import org.joget.apps.userview.model.UserviewMenu;
-import org.joget.commons.util.LogUtil;
-import org.joget.commons.util.StringUtil;
-import org.joget.plugin.base.PluginManager;
-import org.joget.workflow.model.service.WorkflowManager;
-import org.kecak.apps.form.service.FormDataUtil;
-import org.springframework.context.ApplicationContext;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.*;
-import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.joget.apps.app.model.AppDefinition;
+import org.joget.apps.app.service.AppUtil;
+import org.joget.apps.form.model.*;
+import org.joget.apps.form.service.FormService;
+import org.joget.apps.userview.model.UserviewMenu;
+import org.joget.commons.util.StringUtil;
+import org.joget.workflow.model.service.WorkflowManager;
+import org.joget.workflow.util.WorkflowUtil;
+import org.springframework.context.ApplicationContext;
+
 
 public class ProfileMenu extends UserviewMenu {
 
@@ -73,7 +68,12 @@ public class ProfileMenu extends UserviewMenu {
 
     @Override
     public String getPropertyOptions() {
-        return AppUtil.readPluginResource(getClassName(), "/properties/profileMenu.json", null, true, "/messages/profileMenu");
+    	AppDefinition appDef = AppUtil.getCurrentAppDefinition();
+        String appId = appDef.getId();
+        String appVersion = appDef.getVersion().toString();
+        Object[] arguments = new Object[]{appId, appVersion};
+        String json = AppUtil.readPluginResource(getClass().getName(), "/properties/profileMenu.json", arguments, true, "/messages/profileMenu");
+        return json;
     }
 
     @Override
@@ -83,41 +83,106 @@ public class ProfileMenu extends UserviewMenu {
 
     @Override
     public String getJspPage() {
-        final ApplicationContext applicationContext = AppUtil.getApplicationContext();
-        final AppDefinition appDefinition = AppUtil.getCurrentAppDefinition();
-        final PluginManager pluginManager = (PluginManager) applicationContext.getBean("pluginManager");
-        AppService appService = (AppService) applicationContext.getBean("appService");
-        AppDefinition appDef = AppUtil.getCurrentAppDefinition();
-        final Map<String, Object> dataModel = new HashMap<>();
+    	return getJspPage("userview/plugin/form.jsp", "userview/plugin/unauthorized.jsp");
+    }
 
+    private String getJspPage(String jspFile, String unauthorizedJspFile) {
+    	if ("submit".equals(getRequestParameterString("_action"))) {
+            // only allow POST
+            HttpServletRequest request = WorkflowUtil.getHttpServletRequest();
+            if (request != null && !"POST".equalsIgnoreCase(request.getMethod())) {
+                return unauthorizedJspFile;
+            }
+
+            // submit form
+            try {
+				submitForm();
+			} catch (UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+        } else {
+            try {
+				displayForm();
+			} catch (UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+        }
+
+        return jspFile;
+	}
+
+	private void displayForm() throws UnsupportedEncodingException {
+		final ApplicationContext applicationContext = AppUtil.getApplicationContext();
 
         WorkflowManager workflowManager = (WorkflowManager) applicationContext.getBean("workflowManager");
         String currentUser = workflowManager.getWorkflowUserManager().getCurrentUsername();
 
         FormData formData = new FormData();
         formData.setPrimaryKeyValue(currentUser);
+		String mode = "edit";
+		
+        String formUrl = addParamToUrl(getUrl(), "_mode", mode) + "&_action=submit" + "&id=" + URLEncoder.encode(currentUser, "UTF-8");
 
-        String mode = "edit";
-        try {
-            String formUrl = addParamToUrl(getUrl(), "_mode", mode) + "&_action=submit" + "&id=" + URLEncoder.encode(currentUser, "UTF-8");
+		Form form = Utils.viewDataForm("userProfile", "Submit", "Cancel", formData, formUrl, getUrl(), mode);
 
-			Form form = Utils.viewDataForm("userProfile", "Submit", "Cancel", formData, formUrl, getUrl(), mode);
+		FormService formService = (FormService) applicationContext.getBean("formService");
+		Form profile = formService.loadFormData(form, formData);
+		
+		String formHtml = formService.generateElementHtml(form, formData);
 
-            FormService formService = (FormService) applicationContext.getBean("formService");
+		String formJson = formService.generateElementJson(form);
+		
+		this.setProperty("view", "formView");
+		this.setProperty("appDef", AppUtil.getCurrentAppDefinition());
+		this.setProperty("formHtml", formHtml);
+		this.setProperty("formJson", formJson);
+	}
+
+	private void submitForm() throws UnsupportedEncodingException {
+		ApplicationContext applicationContext = AppUtil.getApplicationContext();
+		WorkflowManager workflowManager = (WorkflowManager) applicationContext.getBean("workflowManager");
+        String currentUser = workflowManager.getWorkflowUserManager().getCurrentUsername();
+        
+		FormData formData = new FormData();
+		formData.setPrimaryKeyValue(currentUser);
+		String mode = "edit";
+		
+        String formUrl = addParamToUrl(getUrl(), "_mode", mode) + "&_action=submit" + "&id=" + URLEncoder.encode(currentUser, "UTF-8");
+
+		Form form = Utils.viewDataForm("userProfile", "Submit", "Cancel", formData, formUrl, getUrl(), mode);
+		form = submitDataForm(formData, form);
+		
+		if(form!=null) {
+			// generate form HTML
+			FormService formService = (FormService) applicationContext.getBean("formService");
             String formHtml = formService.generateElementHtml(form, formData);
-            setProperty("formHtml", formHtml);
-
-            String formJson = formService.generateElementJson(form);
-            this.setProperty("formJson", formJson);
-
+            setProperty(REDIRECT_URL_PROPERTY, "");
+            setProperty(REDIRECT_PARENT_PROPERTY, "false");
             setProperty("view", "formView");
-        } catch (UnsupportedEncodingException e1) {
-            LogUtil.error(this.getClassName(), e1, e1.getMessage());
-        }
-        return "userview/plugin/form.jsp";
-    }
+            setProperty("stay", formData.getStay());
+            setProperty("submitted", Boolean.TRUE);
+            setProperty("formHtml", formHtml);
+            setProperty("redirectUrlAfterComplete", "");
+		}
+		
+	}
 
-    protected String addParamToUrl(String url, String name, String value) {
+	private Form submitDataForm(FormData formData, Form form) {
+		ApplicationContext ac = AppUtil.getApplicationContext();
+        FormService formService = (FormService) ac.getBean("formService");
+        formData = formService.retrieveFormDataFromRequestMap(formData, getRequestParameters());
+        formData = formService.executeFormActions(form, formData);
+
+        setProperty("submitted", Boolean.TRUE);
+        setProperty("redirectUrlAfterComplete", getPropertyString("redirectUrlAfterComplete"));
+
+        return form;
+	}
+
+	protected String addParamToUrl(String url, String name, String value) {
         return StringUtil.addParamsToUrl(url, name, value);
     }
 
