@@ -6,8 +6,8 @@ import org.joget.apps.form.lib.DefaultFormBinder;
 import org.joget.apps.form.model.*;
 import org.joget.apps.form.service.FormUtil;
 import org.joget.commons.util.HashSalt;
-import org.joget.commons.util.LogUtil;
 import org.joget.commons.util.PasswordGeneratorUtil;
+import org.joget.commons.util.PasswordSalt;
 import org.joget.commons.util.SecurityUtil;
 import org.joget.directory.dao.*;
 import org.joget.directory.model.Employment;
@@ -20,9 +20,6 @@ import org.joget.workflow.util.WorkflowUtil;
 import org.springframework.context.ApplicationContext;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -249,34 +246,41 @@ public class UserDirectoryFormBinder extends DefaultFormBinder implements FormLo
             if (us != null) {
                 user.setPassword(us.encryptPassword(user.getUsername(), password));
             } else {
-                final UserSalt currentUserSalt = Optional.of(user)
+                final Optional<UserSalt> optOurrentUserSalt = Optional.of(user)
                         .map(User::getId)
-                        .map(userSaltDao::getUserSaltByUserId)
-                        .orElseGet(Try.onSupplier(() -> {
-                            final HashSalt hashSalt = PasswordGeneratorUtil.createNewHashWithSalt(plainPassword);
+                        .map(userSaltDao::getUserSaltByUserId);
 
-                            final UserSalt userSalt = new UserSalt();
-                            userSalt.setUserId(user.getId());
-                            userSalt.setId(UUID.randomUUID().toString());
-                            userSalt.setRandomSalt(hashSalt.getSalt());
+                // update password
+                if (optOurrentUserSalt.isPresent()) {
+                    optOurrentUserSalt
+                            .map(UserSalt::getRandomSalt)
+                            .map(s -> new PasswordSalt(s, plainPassword))
+                            .map(Try.onFunction(PasswordGeneratorUtil::hashPassword))
+                            .ifPresent(user::setPassword);
+                }
 
-                            final Date date = new Date();
-                            userSalt.setDateCreated(date);
-                            userSalt.setDateModified(date);
+                // create new password
+                else {
+                    optOurrentUserSalt.orElseGet(Try.onSupplier(() -> {
+                        final HashSalt hashSalt = PasswordGeneratorUtil.createNewHashWithSalt(plainPassword);
 
-                            final String currentUser = WorkflowUtil.getCurrentUsername();
-                            userSalt.setCreatedBy(currentUser);
-                            userSalt.setModifiedBy(currentUser);
+                        final UserSalt userSalt = new UserSalt();
+                        userSalt.setUserId(user.getId());
+                        userSalt.setId(UUID.randomUUID().toString());
+                        userSalt.setRandomSalt(hashSalt.getSalt());
 
-                            userSaltDao.addUserSalt(userSalt);
+                        final Date date = new Date();
+                        userSalt.setDateCreated(date);
+                        userSalt.setDateModified(date);
 
-                            user.setPassword(hashSalt.getHash());
+                        final String currentUser = WorkflowUtil.getCurrentUsername();
+                        userSalt.setCreatedBy(currentUser);
+                        userSalt.setModifiedBy(currentUser);
 
-                            return userSalt;
-                        }));
+                        userSaltDao.addUserSalt(userSalt);
 
-                if(currentUserSalt == null) {
-                    LogUtil.warn(getClassName(), "Error generating setting password for user [" + user.getId() + "]");
+                        return userSalt;
+                    }));
                 }
             }
         }
