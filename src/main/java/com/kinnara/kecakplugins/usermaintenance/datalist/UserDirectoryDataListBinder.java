@@ -108,8 +108,29 @@ public class UserDirectoryDataListBinder extends DataListBinderDefault {
     }
 
     protected DataListFilterQueryObject getCriteria(Map properties, DataListFilterQueryObject[] filterQueryObjects) {
-        final DataListFilterQueryObject criteria = new DataListFilterQueryObject();
-        criteria.setQuery("WHERE 1 = 1");
-        return criteria;
+        return Arrays.stream(filterQueryObjects)
+                .collect(() -> {
+                            final DataListFilterQueryObject collected = new DataListFilterQueryObject();
+                            collected.setValues(new String[0]);
+                            collected.setQuery("where 1 = 1");
+                            collected.setOperator("");
+                            return collected;
+                        },
+                        (collected, item) -> {
+                            final String query = String.join(" ", collected.getQuery(), item.getOperator(), item.getQuery());
+                            collected.setQuery(query);
+
+                            final String[] values = Stream.concat(Arrays.stream(collected.getValues()), Arrays.stream(item.getValues()))
+                                            .toArray(String[]::new);
+                            collected.setValues(values);
+                        },
+                        (f1, f2) -> {
+                            final String query = String.join(" ", f1.getQuery(), f2.getOperator(), f2.getQuery());
+                            f1.setQuery(query);
+
+                            final String[] values = Stream.concat(Arrays.stream(f1.getValues()), Arrays.stream(f2.getValues()))
+                                    .toArray(String[]::new);
+                            f1.setValues(values);
+                        });
     }
 }

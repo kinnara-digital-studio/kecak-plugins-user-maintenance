@@ -148,7 +148,7 @@ public class Utils {
         return form;
     }
 
-    protected static String createLabel(String input) {
+    public static String createLabel(String input) {
         return Arrays.stream(input.split("(?=\\p{Upper})|[^a-zA-Z0-9]"))
                 .map(s -> s.substring(0, 1).toUpperCase() + s.substring(1))
                 .collect(Collectors.joining(" "));

@@ -6,6 +6,7 @@ import com.kinnarastudio.commons.Try;
 import com.kinnarastudio.commons.jsonstream.JSONCollectors;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.datalist.lib.HyperlinkDataListAction;
+import org.joget.apps.datalist.lib.TextFieldDataListFilterType;
 import org.joget.apps.datalist.model.*;
 import org.joget.apps.form.model.Form;
 import org.joget.apps.form.model.FormData;
@@ -181,13 +182,19 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
     }
 
     protected DataListBinder getDataListBinder() {
-        final UserDirectoryDataListBinder dataListBinder = new UserDirectoryDataListBinder();
-        return dataListBinder;
+        return new UserDirectoryDataListBinder();
     }
 
     protected DataListFilter[] getDataListFilters() {
-        // TODO
-        return new DataListFilter[0];
+        return Stream.of("username", "firstName", "lastName", "email")
+                .map(s -> {
+                    final DataListFilter filterByUsername = new DataListFilter();
+                    filterByUsername.setName(s);
+                    filterByUsername.setLabel(Utils.createLabel(s));
+                    filterByUsername.setOperator("and");
+                    return filterByUsername;
+                })
+                .toArray(DataListFilter[]::new);
     }
 
     protected DataListAction[] getDataListActions() {
@@ -273,12 +280,12 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
                 if ("REFERER".equals(actionResult.getUrl())) {
                     HttpServletRequest request = WorkflowUtil.getHttpServletRequest();
                     if (request != null && request.getHeader("Referer") != null) {
-                        this.setRedirectUrl(request.getHeader("Referer"));
+                        setRedirectUrl(request.getHeader("Referer"));
                     } else {
-                        this.setRedirectUrl("REFERER");
+                        setRedirectUrl("REFERER");
                     }
                 } else {
-                    this.setRedirectUrl(actionResult.getUrl());
+                    setRedirectUrl(actionResult.getUrl());
                 }
             }
 
@@ -287,7 +294,7 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
             ex.printStackTrace(new PrintWriter(out));
             String message = ex.toString();
             message = message + "\r\n<pre class=\"stacktrace\">" + out.getBuffer() + "</pre>";
-            this.setProperty("error", message);
+            setProperty("error", message);
         }
     }
 
