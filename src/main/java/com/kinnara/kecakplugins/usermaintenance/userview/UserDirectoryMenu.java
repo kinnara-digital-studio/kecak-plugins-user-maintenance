@@ -2,16 +2,21 @@ package com.kinnara.kecakplugins.usermaintenance.userview;
 
 import com.kinnara.kecakplugins.usermaintenance.datalist.UserDirectoryDataListBinder;
 import com.kinnara.kecakplugins.usermaintenance.utils.Utils;
+import com.kinnarastudio.commons.Try;
+import com.kinnarastudio.commons.jsonstream.JSONCollectors;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.datalist.lib.HyperlinkDataListAction;
 import org.joget.apps.datalist.model.*;
 import org.joget.apps.form.model.Form;
 import org.joget.apps.form.model.FormData;
 import org.joget.apps.form.service.FormService;
+import org.joget.apps.form.service.FormUtil;
 import org.joget.apps.userview.model.UserviewMenu;
 import org.joget.commons.util.StringUtil;
 import org.joget.plugin.base.PluginManager;
 import org.joget.workflow.util.WorkflowUtil;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.kecak.apps.userview.model.AceUserviewMenu;
 import org.kecak.apps.userview.model.BootstrapUserviewTheme;
 import org.springframework.context.ApplicationContext;
@@ -20,10 +25,9 @@ import javax.annotation.Nonnull;
 import javax.servlet.http.HttpServletRequest;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author aristo
@@ -96,7 +100,19 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
 
     @Override
     public String getPropertyOptions() {
-        return AppUtil.readPluginResource(getClassName(), "/properties/UserDirectoryMenu.json");
+        final DataListBinder binder = getDataListBinder();
+        final JSONArray jsonColumns = Optional.of(binder)
+                .map(DataListBinder::getColumns)
+                .map(Arrays::stream)
+                .orElseGet(Stream::empty)
+                .map(Try.onFunction(c -> {
+                    final JSONObject jsonColumn = new JSONObject();
+                    jsonColumn.put(FormUtil.PROPERTY_VALUE, c.getName());
+                    jsonColumn.put(FormUtil.PROPERTY_LABEL, c.getLabel());
+                    return jsonColumn;
+                }))
+                .collect(JSONCollectors.toJSONArray());
+        return AppUtil.readPluginResource(getClassName(), "/properties/UserDirectoryMenu.json", new String[] {jsonColumns.toString()}, false, null);
     }
 
     @Override
@@ -223,7 +239,7 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
     }
 
     protected boolean isAddMode() {
-        return "edit".equals(getRequestParameterString("_mode")) && getPrimaryKey() == null;
+        return "add".equalsIgnoreCase(getRequestParameterString("_mode")) || "edit".equals(getRequestParameterString("_mode")) && getPrimaryKey() == null;
     }
 
     protected boolean isEditMode() {

@@ -79,7 +79,7 @@
         "name"  : "orderBy",
         "required" : "false",
         "type" : "selectbox",
-        "options_callback" : "DatalistBuilder.getColumnOptions"
+        "options" : %s
       },
       {
         "name" : "list-customHeader",
