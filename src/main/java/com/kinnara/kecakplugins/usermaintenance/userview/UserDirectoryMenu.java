@@ -267,25 +267,23 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
             // set current datalist
             setProperty("dataList", dataList);
 
-            final DataListActionResult actionResult = dataList.getActionResult();
-            if (actionResult == null) {
-                return;
-            }
+            final Optional<DataListActionResult> optActionResult = Optional.of(dataList).map(DataList::getActionResult);
+            optActionResult.map(DataListActionResult::getMessage).ifPresent(this::setAlertMessage);
 
-            if (actionResult.getMessage() != null && !actionResult.getMessage().isEmpty()) {
-                this.setAlertMessage(actionResult.getMessage());
-            }
+            final Optional<String> optType = optActionResult.map(DataListActionResult::getType).filter("REDIRECT"::equalsIgnoreCase);
+            final Optional<String> optUrl = optActionResult.map(DataListActionResult::getUrl).filter(s -> !s.isEmpty());
 
-            if (actionResult.getType() != null && "REDIRECT".equals(actionResult.getType()) && actionResult.getUrl() != null && !actionResult.getUrl().isEmpty()) {
-                if ("REFERER".equals(actionResult.getUrl())) {
-                    HttpServletRequest request = WorkflowUtil.getHttpServletRequest();
+            if (optType.isPresent() && optUrl.isPresent()) {
+                final String url = optUrl.get();
+                if ("REFERER".equalsIgnoreCase(url)) {
+                    final HttpServletRequest request = WorkflowUtil.getHttpServletRequest();
                     if (request != null && request.getHeader("Referer") != null) {
                         setRedirectUrl(request.getHeader("Referer"));
                     } else {
                         setRedirectUrl("REFERER");
                     }
                 } else {
-                    setRedirectUrl(actionResult.getUrl());
+                    setRedirectUrl(url);
                 }
             }
 
