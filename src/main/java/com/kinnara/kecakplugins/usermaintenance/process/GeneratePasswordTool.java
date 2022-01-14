@@ -6,6 +6,7 @@ import org.apache.commons.text.RandomStringGenerator;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.commons.util.LogUtil;
 import org.joget.directory.dao.UserDao;
+import org.joget.directory.model.User;
 import org.joget.plugin.base.DefaultApplicationPlugin;
 import org.joget.plugin.base.PluginManager;
 import org.joget.workflow.model.WorkflowAssignment;
@@ -52,10 +53,14 @@ public class GeneratePasswordTool extends DefaultApplicationPlugin implements Pa
                     u.setPassword(password);
                     u.setConfirmPassword(password);
 
-                    LogUtil.info(getClassName(), "Updating password for user ["+ u.getId() + "] password [" + u.getPassword() + "]");
-                    updatePassword(u);
+                    if("true".equalsIgnoreCase(getPropertyString("debug"))) {
+                        LogUtil.info(getClassName(), "Updating password for user [" + u.getId() + "] password [" + u.getPassword() + "]");
+                    }
 
-                    String varPassword = getWorkflowVariableForPassword();
+                    final User updatedPassword = updatePassword(u);
+                    userDao.updateUser(updatedPassword);
+
+                    final String varPassword = getWorkflowVariableForPassword();
                     if(!varPassword.isEmpty()) {
                         workflowManager.processVariable(workflowAssignment.getProcessId(), varPassword, password);
                     }
