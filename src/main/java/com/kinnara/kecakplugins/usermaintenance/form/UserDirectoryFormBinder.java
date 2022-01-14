@@ -1,21 +1,16 @@
 package com.kinnara.kecakplugins.usermaintenance.form;
 
+import com.kinnara.kecakplugins.usermaintenance.utils.PasswordUtilMixin;
 import com.kinnarastudio.commons.Try;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.lib.DefaultFormBinder;
 import org.joget.apps.form.model.*;
 import org.joget.apps.form.service.FormUtil;
-import org.joget.commons.util.HashSalt;
-import org.joget.commons.util.PasswordGeneratorUtil;
-import org.joget.commons.util.PasswordSalt;
 import org.joget.commons.util.SecurityUtil;
 import org.joget.directory.dao.*;
 import org.joget.directory.model.Employment;
 import org.joget.directory.model.Organization;
 import org.joget.directory.model.User;
-import org.joget.directory.model.UserSalt;
-import org.joget.directory.model.service.DirectoryUtil;
-import org.joget.directory.model.service.UserSecurity;
 import org.joget.workflow.util.WorkflowUtil;
 import org.springframework.context.ApplicationContext;
 
@@ -47,7 +42,9 @@ import java.util.stream.Stream;
  *     </ul>
  * </ul>
  */
-public class UserDirectoryFormBinder extends DefaultFormBinder implements FormLoadElementBinder, FormStoreElementBinder, FormDataDeletableBinder {
+public class UserDirectoryFormBinder extends DefaultFormBinder implements FormLoadElementBinder,
+        FormStoreElementBinder, FormDataDeletableBinder, PasswordUtilMixin {
+
     @Override
     public String getFormId() {
         final Form form = FormUtil.findRootForm(getElement());
@@ -114,6 +111,19 @@ public class UserDirectoryFormBinder extends DefaultFormBinder implements FormLo
 
                     row.setId(primaryKey);
 
+                    final String username = row.getProperty("username", row.getId());
+                    final String firstName = row.getProperty("firstName");
+                    final String lastName = row.getProperty("lastName");
+                    final String email = row.getProperty("email");
+                    final String strActive = row.getProperty("active", "true");
+                    final int active = strActive.equals("true") || strActive.equals("active") || strActive.equals("1") ? 1 : 0;
+                    final String locale = row.getProperty("locale");
+                    final String telephoneNumber = row.getProperty("telephone_number");
+                    final String password = row.getProperty("password", "");
+                    final String plainPassword = SecurityUtil.decrypt(password);
+                    final String confirmPassword = row.getProperty("confirm_password", "");
+                    final String plainConfirmPassword = SecurityUtil.decrypt(confirmPassword);
+
                     final Optional<User> optUser = Optional.ofNullable(primaryKey)
                             .filter(s -> !s.isEmpty())
                             .map(userDao::getUserById);
@@ -121,55 +131,58 @@ public class UserDirectoryFormBinder extends DefaultFormBinder implements FormLo
                     final Optional<Organization> optOrganization = Optional.ofNullable(row.getProperty("organizationId"))
                             .map(organizationDao::getOrganization);
 
-                    final String active = row.getProperty("active", "true");
-                    final String password = row.getProperty("password", "");
-                    final String confirmPassword = row.getProperty("confirm_password", "");
-
+                    // update existing user
                     if (optUser.isPresent()) {
                         final User user = optUser.get();
                         user.setId(row.getId());
-                        user.setUsername(row.getProperty("username", row.getId()));
-                        user.setFirstName(row.getProperty("firstName"));
-                        user.setLastName(row.getProperty("lastName"));
-                        user.setEmail(row.getProperty("email"));
-                        user.setActive("true".equals(active) || "active".equals(active) || "1".equals(active) ? 1 : 0);
-                        user.setLocale(row.getProperty("locale"));
-                        user.setTelephoneNumber(row.getProperty("telephone_number"));
+                        user.setUsername(username);
+                        user.setFirstName(firstName);
+                        user.setLastName(lastName);
+                        user.setEmail(email);
+                        user.setActive(active);
+                        user.setLocale(locale);
+                        user.setTelephoneNumber(telephoneNumber);
+                        user.setPassword(plainPassword);
+                        user.setConfirmPassword(plainConfirmPassword);
                         user.setDateModified(row.getDateModified());
                         user.setModifiedBy(row.getModifiedBy());
 
-                        updatePassword(user, password, confirmPassword);
+                        final User passwordUpdatedUser = updatePassword(user);
+                        optOrganization.ifPresent(o -> setEmployment(passwordUpdatedUser, o));
 
-                        optOrganization.ifPresent(o -> setEmployment(user, o));
-
-                        userDao.updateUser(user);
+                        userDao.updateUser(passwordUpdatedUser);
 
                         row.setDateModified(now);
                         row.setModifiedBy(currentUser);
-                    } else {
+                    }
+
+                    // create new user
+                    else {
                         final User user = new User();
                         user.setId(row.getId());
-                        user.setUsername(row.getProperty("username", row.getId()));
-                        user.setFirstName(row.getProperty("firstName"));
-                        user.setLastName(row.getProperty("lastName"));
-                        user.setEmail(row.getProperty("email"));
-                        user.setActive(active.equals("true") || active.equals("active") || active.equals("1") ? 1 : 0);
-                        user.setLocale(row.getProperty("locale"));
-                        user.setTelephoneNumber(row.getProperty("telephone_number"));
-
-                        updatePassword(user, password, confirmPassword);
-
+                        user.setUsername(username);
+                        user.setFirstName(firstName);
+                        user.setLastName(lastName);
+                        user.setEmail(email);
+                        user.setActive(active);
+                        user.setLocale(locale);
+                        user.setTelephoneNumber(telephoneNumber);
+                        user.setPassword(plainPassword);
+                        user.setConfirmPassword(plainConfirmPassword);
                         user.setDateCreated(now);
                         user.setCreatedBy(currentUser);
-                        userDao.addUser(user);
+                        user.setDateModified(now);
+                        user.setModifiedBy(currentUser);
 
-                        Optional.of("roleId")
-                                .map(s -> row.getProperty(s, WorkflowUtil.ROLE_USER))
+                        final User passwordUpdatedUser = updatePassword(user);
+                        userDao.addUser(passwordUpdatedUser);
+
+                        Optional.of(row.getProperty("roleId", WorkflowUtil.ROLE_USER))
                                 .map(roleDao::getRole)
                                 .map(Collections::singleton)
                                 .ifPresent(user::setRoles);
 
-                        optOrganization.ifPresent(o -> setEmployment(user, o));
+                        optOrganization.ifPresent(o -> setEmployment(passwordUpdatedUser, o));
 
                         row.setDateCreated(now);
                         row.setCreatedBy(currentUser);
@@ -233,56 +246,5 @@ public class UserDirectoryFormBinder extends DefaultFormBinder implements FormLo
         employmentDao.assignUserToOrganization(employment.getUserId(), organization.getId());
 
         return user;
-    }
-
-    protected void updatePassword(User user, String password, String confirmPassword) {
-        final ApplicationContext applicationContext = AppUtil.getApplicationContext();
-        final UserSaltDao userSaltDao = (UserSaltDao) applicationContext.getBean("userSaltDao");
-        final UserSecurity us = DirectoryUtil.getUserSecurity();
-        final String plainPassword = SecurityUtil.decrypt(password);
-        final String plainConfirmPassword = SecurityUtil.decrypt(confirmPassword);
-
-        if (!plainPassword.isEmpty() && plainPassword.equals(plainConfirmPassword)) {
-            if (us != null) {
-                user.setPassword(us.encryptPassword(user.getUsername(), password));
-            } else {
-                final Optional<UserSalt> optOurrentUserSalt = Optional.of(user)
-                        .map(User::getId)
-                        .map(userSaltDao::getUserSaltByUserId);
-
-                // update password
-                if (optOurrentUserSalt.isPresent()) {
-                    optOurrentUserSalt
-                            .map(UserSalt::getRandomSalt)
-                            .map(s -> new PasswordSalt(s, plainPassword))
-                            .map(Try.onFunction(PasswordGeneratorUtil::hashPassword))
-                            .ifPresent(user::setPassword);
-                }
-
-                // create new password
-                else {
-                    optOurrentUserSalt.orElseGet(Try.onSupplier(() -> {
-                        final HashSalt hashSalt = PasswordGeneratorUtil.createNewHashWithSalt(plainPassword);
-
-                        final UserSalt userSalt = new UserSalt();
-                        userSalt.setUserId(user.getId());
-                        userSalt.setId(UUID.randomUUID().toString());
-                        userSalt.setRandomSalt(hashSalt.getSalt());
-
-                        final Date date = new Date();
-                        userSalt.setDateCreated(date);
-                        userSalt.setDateModified(date);
-
-                        final String currentUser = WorkflowUtil.getCurrentUsername();
-                        userSalt.setCreatedBy(currentUser);
-                        userSalt.setModifiedBy(currentUser);
-
-                        userSaltDao.addUserSalt(userSalt);
-
-                        return userSalt;
-                    }));
-                }
-            }
-        }
     }
 }

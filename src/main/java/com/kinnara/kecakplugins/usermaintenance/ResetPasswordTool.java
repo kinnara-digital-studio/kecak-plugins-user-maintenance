@@ -1,12 +1,14 @@
 package com.kinnara.kecakplugins.usermaintenance;
 
+import com.kinnara.kecakplugins.usermaintenance.process.GeneratePasswordTool;
+
 /**
  * @author aristo
  *
- * Deprecated, use @{@link com.kinnara.kecakplugins.usermaintenance.process.ResetPasswordTool}
+ * Deprecated, use @{@link GeneratePasswordTool}
  */
 @Deprecated
-public class ResetPasswordTool extends com.kinnara.kecakplugins.usermaintenance.process.ResetPasswordTool {
+public class ResetPasswordTool extends GeneratePasswordTool {
     @Override
     public String getClassName() {
         return getClass().getName();

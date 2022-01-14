@@ -14,7 +14,13 @@ import org.joget.workflow.model.service.WorkflowManager;
 import java.util.Map;
 import java.util.Optional;
 
-public class ResetPasswordTool extends DefaultApplicationPlugin implements PasswordUtilMixin {
+/**
+ * @author aristo
+ *
+ * Generate random password
+ *
+ */
+public class GeneratePasswordTool extends DefaultApplicationPlugin implements PasswordUtilMixin {
     @Override
     public String getName() {
         return getLabel();
@@ -32,24 +38,21 @@ public class ResetPasswordTool extends DefaultApplicationPlugin implements Passw
 
     @Override
     public Object execute(Map props) {
-        PluginManager pluginManager = (PluginManager) props.get("pluginManager");
-        UserDao userDao = (UserDao) pluginManager.getBean("userDao");
-        WorkflowManager workflowManager = (WorkflowManager) pluginManager.getBean("workflowManager");
-        WorkflowAssignment workflowAssignment = (WorkflowAssignment) props.get("workflowAssignment");
-//        UserSecurity us = DirectoryUtil.getUserSecurity();
+        final PluginManager pluginManager = (PluginManager) props.get("pluginManager");
+        final UserDao userDao = (UserDao) pluginManager.getBean("userDao");
+        final WorkflowManager workflowManager = (WorkflowManager) pluginManager.getBean("workflowManager");
+        final WorkflowAssignment workflowAssignment = (WorkflowAssignment) props.get("workflowAssignment");
 
-        String username = String.valueOf(props.get("username"));
-
-        Optional.of(username)
+        Optional.of("username")
+                .map(props::get)
+                .map(String::valueOf)
                 .map(userDao::getUser)
                 .ifPresent(Try.onConsumer(u -> {
                     final String password = generateRandomPassword(getDigits(props), isNumeric(), isUpperCase(), isLowerCase(), isSpecialCharacters());
-
-                    LogUtil.info(getClassName(), "Updating password for user ["+ u.getId() + "] with ["+password+"]");
-
                     u.setPassword(password);
                     u.setConfirmPassword(password);
 
+                    LogUtil.info(getClassName(), "Updating password for user ["+ u.getId() + "] password [" + u.getPassword() + "]");
                     updatePassword(u);
 
                     String varPassword = getWorkflowVariableForPassword();
@@ -64,7 +67,7 @@ public class ResetPasswordTool extends DefaultApplicationPlugin implements Passw
 
     @Override
     public String getLabel() {
-        return "Reset Password Tool";
+        return "Generate Password Tool";
     }
 
     @Override
@@ -74,32 +77,7 @@ public class ResetPasswordTool extends DefaultApplicationPlugin implements Passw
 
     @Override
     public String getPropertyOptions() {
-        return AppUtil.readPluginResource(getClassName(), "/properties/ResetPasswordTool.json");
-    }
-
-    protected String generateRandomPassword(int digits, boolean numeric, boolean upperCase, boolean lowerCase, boolean specialCharacter) {
-        StringBuilder sb = new StringBuilder();
-        if(numeric) {
-            sb.append("0123456789");
-        }
-
-        if(upperCase) {
-            sb.append("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
-        }
-
-        if(lowerCase) {
-            sb.append("abcdefhhijklmnopqrstuvwxyz");
-        }
-
-        if(specialCharacter) {
-            sb.append("[]|\\@#%^&*()-_=+");
-        }
-
-        RandomStringGenerator pwdGenerator = new RandomStringGenerator.Builder()
-                .selectFrom(sb.toString().toCharArray())
-                .build();
-
-        return pwdGenerator.generate(digits);
+        return AppUtil.readPluginResource(getClassName(), "/properties/GeneratePasswordTool.json");
     }
 
     protected String getWorkflowVariableForPassword() {
