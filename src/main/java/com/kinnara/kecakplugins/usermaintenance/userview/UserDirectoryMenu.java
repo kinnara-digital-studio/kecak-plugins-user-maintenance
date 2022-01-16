@@ -51,7 +51,7 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
 
     @Override
     public String getIcon() {
-        return null;
+        return "/plugin/org.joget.apps.userview.lib.RunProcess/images/grid_icon.gif";
     }
 
     @Override
@@ -61,7 +61,7 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
 
     @Override
     public boolean isHomePageSupported() {
-        return false;
+        return true;
     }
 
     @Override
@@ -143,7 +143,6 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
     }
 
     protected String getJspPage(String dataListFile, String formFile, String unauthorizedFile) {
-        LogUtil.info(getClassName(), "["+ (Integer.valueOf(10) == Integer.valueOf(10)) +"]");
         // handle form
         if (isAddMode() || isEditMode()) {
             final String mode = isAddMode() ? "add" : "edit";
@@ -368,8 +367,9 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
         final String formUrl = addParamToUrl(addParamToUrl(addParamToUrl(url, "_action", "submit"), "_mode", mode), "id", id);
         final Form form = Utils.viewDataForm("displayUser-" + getPropertyString("id"), "Submit",  "Back", formData, formUrl, url, mode);
 
-        String formHtml = formService.retrieveFormHtml(form, formData);
-        String formJson = formService.generateElementJson(form);
+        final String formHtml = formService.retrieveFormHtml(form, formData);
+        final String formJson = formService.generateElementJson(form);
+
         setProperty("view", "formView");
         setProperty("formHtml", formHtml);
         setProperty("formJson", formJson);

@@ -12,13 +12,16 @@ import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.model.*;
 import org.joget.apps.form.service.FormService;
 import org.joget.apps.userview.model.UserviewMenu;
+import org.joget.commons.util.LogUtil;
 import org.joget.commons.util.StringUtil;
 import org.joget.workflow.model.service.WorkflowManager;
 import org.joget.workflow.util.WorkflowUtil;
+import org.kecak.apps.userview.model.AceUserviewMenu;
+import org.kecak.apps.userview.model.BootstrapUserviewTheme;
 import org.springframework.context.ApplicationContext;
 
 
-public class ProfileMenu extends UserviewMenu {
+public class ProfileMenu extends UserviewMenu implements AceUserviewMenu {
 
     @Override
     public String getLabel() {
@@ -89,7 +92,7 @@ public class ProfileMenu extends UserviewMenu {
     private String getJspPage(String jspFile, String unauthorizedJspFile) {
     	if ("submit".equals(getRequestParameterString("_action"))) {
             // only allow POST
-            HttpServletRequest request = WorkflowUtil.getHttpServletRequest();
+            final HttpServletRequest request = WorkflowUtil.getHttpServletRequest();
             if (request != null && !"POST".equalsIgnoreCase(request.getMethod())) {
                 return unauthorizedJspFile;
             }
@@ -98,15 +101,13 @@ public class ProfileMenu extends UserviewMenu {
             try {
 				submitForm();
 			} catch (UnsupportedEncodingException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+                LogUtil.error(getClassName(), e, e.getMessage());
 			}
         } else {
             try {
 				displayForm();
 			} catch (UnsupportedEncodingException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+                LogUtil.error(getClassName(), e, e.getMessage());
 			}
 
         }
@@ -129,10 +130,8 @@ public class ProfileMenu extends UserviewMenu {
 		Form form = Utils.viewDataForm("userProfile", "Submit", "Cancel", formData, formUrl, getUrl(), mode);
 
 		FormService formService = (FormService) applicationContext.getBean("formService");
-		Form profile = formService.loadFormData(form, formData);
-		
-		String formHtml = formService.generateElementHtml(form, formData);
 
+		String formHtml = formService.generateElementHtml(form, formData);
 		String formJson = formService.generateElementJson(form);
 		
 		this.setProperty("view", "formView");
@@ -155,22 +154,24 @@ public class ProfileMenu extends UserviewMenu {
 		Form form = Utils.viewDataForm("userProfile", "Submit", "Cancel", formData, formUrl, getUrl(), mode);
 		form = submitDataForm(formData, form);
 		
-		if(form!=null) {
-			// generate form HTML
-			FormService formService = (FormService) applicationContext.getBean("formService");
-            String formHtml = formService.generateElementHtml(form, formData);
+		if(form != null) {
+            // generate form HTML
+            final FormService formService = (FormService) applicationContext.getBean("formService");
+            final String formHtml = formService.generateElementHtml(form, formData);
+            final String formJson = formService.generateElementJson(form);
+
             setProperty(REDIRECT_URL_PROPERTY, "");
             setProperty(REDIRECT_PARENT_PROPERTY, "false");
             setProperty("view", "formView");
             setProperty("stay", formData.getStay());
             setProperty("submitted", Boolean.TRUE);
             setProperty("formHtml", formHtml);
+            setProperty("formJson", formJson);
             setProperty("redirectUrlAfterComplete", "");
-		}
-		
+        }
 	}
 
-	private Form submitDataForm(FormData formData, Form form) {
+	protected Form submitDataForm(FormData formData, Form form) {
 		ApplicationContext ac = AppUtil.getApplicationContext();
         FormService formService = (FormService) ac.getBean("formService");
         formData = formService.retrieveFormDataFromRequestMap(formData, getRequestParameters());
@@ -190,4 +191,18 @@ public class ProfileMenu extends UserviewMenu {
         return value == null || value.toString().isEmpty() ? ifEmpty : value;
     }
 
+    @Override
+    public String getAceJspPage(BootstrapUserviewTheme bootstrapUserviewTheme) {
+        return getJspPage(bootstrapUserviewTheme.getFormJsp(), bootstrapUserviewTheme.getUnauthorizedJsp());
+    }
+
+    @Override
+    public String getAceRenderPage() {
+        return getRenderPage();
+    }
+
+    @Override
+    public String getAceDecoratedMenu() {
+        return getDecoratedMenu();
+    }
 }
