@@ -3,6 +3,7 @@ package com.kinnara.kecakplugins.usermaintenance;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import com.kinnara.kecakplugins.usermaintenance.datalist.ResetUserPasswordDataListAction;
 import com.kinnara.kecakplugins.usermaintenance.process.GeneratePasswordTool;
 import com.kinnara.kecakplugins.usermaintenance.userview.ProfileMenu;
 import com.kinnara.kecakplugins.usermaintenance.userview.UserDirectoryMenu;
@@ -19,6 +20,7 @@ public class Activator implements BundleActivator {
 
         //Register plugin here
         registrationList.add(context.registerService(UserDirectoryMenu.class.getName(), new UserDirectoryMenu(), null));
+        registrationList.add(context.registerService(ResetUserPasswordDataListAction.class.getName(), new ResetUserPasswordDataListAction(), null));
         registrationList.add(context.registerService(GeneratePasswordTool.class.getName(), new GeneratePasswordTool(), null));
         registrationList.add(context.registerService(ProfileMenu.class.getName(), new ProfileMenu(), null));
 

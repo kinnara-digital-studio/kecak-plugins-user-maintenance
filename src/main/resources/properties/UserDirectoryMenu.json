@@ -142,5 +142,36 @@
         "rows" : "3"
       }
     ]
+  },
+  {
+    "title": "Actions",
+    "properties": [
+      {
+        "type": "header",
+        "label": "Reset Password"
+      },
+      {
+        "name": "allowResetPasswordButton",
+        "label": "Show Reset Password Button",
+        "type": "checkbox",
+        "options": [
+          {"value": "true", "label": ""}
+        ]
+      },
+      {
+        "label" : "Reset Password Action Label",
+        "name" : "resetPasswordActionLabel",
+        "type" : "textfield",
+        "control_field": "allowResetPasswordButton",
+        "control_value": "true"
+      },
+      {
+        "name": "resetPasswordConfirmation",
+        "label" : "Reset Password Confirmation",
+        "type": "textfield",
+        "control_field": "allowResetPasswordButton",
+        "control_value": "true"
+      }
+    ]
   }
 ]

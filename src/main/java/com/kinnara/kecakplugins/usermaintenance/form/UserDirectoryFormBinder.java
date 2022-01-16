@@ -147,7 +147,7 @@ public class UserDirectoryFormBinder extends DefaultFormBinder implements FormLo
                         user.setDateModified(row.getDateModified());
                         user.setModifiedBy(row.getModifiedBy());
 
-                        final User passwordUpdatedUser = updatePassword(user);
+                        final User passwordUpdatedUser = generatePassword(user);
                         optOrganization.ifPresent(o -> setEmployment(passwordUpdatedUser, o));
 
                         userDao.updateUser(passwordUpdatedUser);
@@ -174,7 +174,7 @@ public class UserDirectoryFormBinder extends DefaultFormBinder implements FormLo
                         user.setDateModified(now);
                         user.setModifiedBy(currentUser);
 
-                        final User passwordUpdatedUser = updatePassword(user);
+                        final User passwordUpdatedUser = generatePassword(user);
                         userDao.addUser(passwordUpdatedUser);
 
                         Optional.of(row.getProperty("roleId", WorkflowUtil.ROLE_USER))

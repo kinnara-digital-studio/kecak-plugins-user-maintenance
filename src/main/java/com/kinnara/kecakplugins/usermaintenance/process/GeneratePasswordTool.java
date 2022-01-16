@@ -2,7 +2,7 @@ package com.kinnara.kecakplugins.usermaintenance.process;
 
 import com.kinnara.kecakplugins.usermaintenance.utils.PasswordUtilMixin;
 import com.kinnarastudio.commons.Try;
-import org.apache.commons.text.RandomStringGenerator;
+import org.joget.apps.app.lib.EmailTool;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.commons.util.LogUtil;
 import org.joget.directory.dao.UserDao;
@@ -22,6 +22,8 @@ import java.util.Optional;
  *
  */
 public class GeneratePasswordTool extends DefaultApplicationPlugin implements PasswordUtilMixin {
+
+
     @Override
     public String getName() {
         return getLabel();
@@ -57,7 +59,7 @@ public class GeneratePasswordTool extends DefaultApplicationPlugin implements Pa
                         LogUtil.info(getClassName(), "Updating password for user [" + u.getId() + "] password [" + u.getPassword() + "]");
                     }
 
-                    final User updatedPassword = updatePassword(u);
+                    final User updatedPassword = generatePassword(u);
                     userDao.updateUser(updatedPassword);
 
                     final String varPassword = getWorkflowVariableForPassword();

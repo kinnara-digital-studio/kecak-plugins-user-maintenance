@@ -1,18 +1,21 @@
 package com.kinnara.kecakplugins.usermaintenance.userview;
 
+import com.kinnara.kecakplugins.usermaintenance.datalist.ResetUserPasswordDataListAction;
 import com.kinnara.kecakplugins.usermaintenance.datalist.UserDirectoryDataListBinder;
 import com.kinnara.kecakplugins.usermaintenance.utils.Utils;
 import com.kinnarastudio.commons.Try;
 import com.kinnarastudio.commons.jsonstream.JSONCollectors;
+import org.joget.apps.app.lib.EmailTool;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.datalist.lib.HyperlinkDataListAction;
-import org.joget.apps.datalist.lib.TextFieldDataListFilterType;
 import org.joget.apps.datalist.model.*;
 import org.joget.apps.form.model.Form;
 import org.joget.apps.form.model.FormData;
 import org.joget.apps.form.service.FormService;
 import org.joget.apps.form.service.FormUtil;
+import org.joget.apps.userview.model.Userview;
 import org.joget.apps.userview.model.UserviewMenu;
+import org.joget.commons.util.LogUtil;
 import org.joget.commons.util.StringUtil;
 import org.joget.plugin.base.PluginManager;
 import org.joget.workflow.util.WorkflowUtil;
@@ -23,17 +26,20 @@ import org.kecak.apps.userview.model.BootstrapUserviewTheme;
 import org.springframework.context.ApplicationContext;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
  * @author aristo
  */
 public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
+    @Nullable
+    private DataList dataList = null;
+
     public final static String DATALIST_ID = "userDirectory";
     public final static String DATALIST_NAME = "User Directory";
     public final static String DATALIST_DESCRIPTION = "Manage users";
@@ -61,7 +67,6 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
     @Override
     public String getDecoratedMenu() {
         final DataList dataList = getDataList();
-        String menuItem = null;
         boolean showRowCount = "true".equalsIgnoreCase(getPropertyString("rowCount"));
         if (showRowCount) {
             int rowCount = dataList.getTotal();
@@ -69,9 +74,9 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
             if (label != null) {
                 label = StringUtil.stripHtmlRelaxed(label);
             }
-            menuItem = "<a href=\"" + getUrl() + "\" class=\"menu-link default\"><span>" + label + "</span> <span class='rowCount'>(" + rowCount + ")</span></a>";
+            return "<a href=\"" + getUrl() + "\" class=\"menu-link default\"><span>" + label + "</span> <span class='rowCount'>(" + rowCount + ")</span></a>";
         }
-        return menuItem;
+        return null;
     }
 
     @Override
@@ -113,7 +118,8 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
                     return jsonColumn;
                 }))
                 .collect(JSONCollectors.toJSONArray());
-        return AppUtil.readPluginResource(getClassName(), "/properties/UserDirectoryMenu.json", new String[] {jsonColumns.toString()}, false, null);
+
+        return AppUtil.readPluginResource(getClassName(), "/properties/UserDirectoryMenu.json", new String[]{jsonColumns.toString()}, true, null);
     }
 
     @Override
@@ -137,10 +143,10 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
     }
 
     protected String getJspPage(String dataListFile, String formFile, String unauthorizedFile) {
-        final String mode = isAddMode() ? "add" : "edit";
-
+        LogUtil.info(getClassName(), "["+ (Integer.valueOf(10) == Integer.valueOf(10)) +"]");
         // handle form
         if (isAddMode() || isEditMode()) {
+            final String mode = isAddMode() ? "add" : "edit";
             setProperty("customHeader", getPropertyString(mode + "-customHeader"));
             setProperty("customFooter", getPropertyString(mode + "-customFooter"));
             setProperty("messageShowAfterComplete", getPropertyString(mode + "-messageShowAfterComplete"));
@@ -158,27 +164,44 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
 
     @Nonnull
     protected DataList getDataList() {
-        final DataList dataList = new DataList();
+        return Optional.ofNullable(dataList)
+                .orElseGet(() -> {
+                    final DataList dataList = new DataList();
 
-        dataList.setId(DATALIST_ID);
-        dataList.setName(DATALIST_NAME);
-        dataList.setDescription(DATALIST_DESCRIPTION);
-        dataList.setDefaultPageSize(getPropertyPageSize());
-        dataList.setShowPageSizeSelector(true);
-        dataList.setDefaultOrder(getPropertyOrder());
-        dataList.setDefaultSortColumn(getPropertyOrderBy());
+                    dataList.setId(DATALIST_ID);
+                    dataList.setName(DATALIST_NAME);
+                    dataList.setDescription(DATALIST_DESCRIPTION);
+                    dataList.setDefaultPageSize(getPropertyPageSize());
+                    dataList.setShowPageSizeSelector(true);
+                    dataList.setDefaultOrder(getPropertyOrder());
+                    dataList.setDefaultSortColumn(getPropertyOrderBy());
+                    dataList.setActionPosition(getPropertyString("buttonPosition"));
+                    dataList.setSelectionType(getPropertyString("selectionType"));
+                    dataList.setCheckboxPosition(getPropertyString("checkboxPosition"));
 
-        {
-            final DataListBinder binder = getDataListBinder();
-            dataList.setBinder(binder);
-            dataList.setColumns(binder.getColumns());
-        }
+                    {
+                        final DataListBinder binder = getDataListBinder();
+                        dataList.setBinder(binder);
+                        dataList.setColumns(binder.getColumns());
+                    }
 
-        dataList.setRowActions(getDataListRowActions());
-        dataList.setActions(getDataListActions());
-        dataList.setFilters(getDataListFilters());
+                    dataList.setRowActions(new DataListAction[0]);
+                    for (DataListAction rowAction : getDataListRowActions()) {
+                        dataList.addDataListAction(rowAction.getClassName(), DataList.DATALIST_ROW_ACTION, rowAction.getProperties());
+                    }
 
-        return dataList;
+                    dataList.setActions(getDataListActions());
+                    dataList.setFilters(getDataListFilters());
+
+                    if (getPropertyString(Userview.USERVIEW_KEY_NAME) != null && getPropertyString(Userview.USERVIEW_KEY_NAME).trim().length() > 0) {
+                        dataList.addBinderProperty(Userview.USERVIEW_KEY_NAME, getPropertyString(Userview.USERVIEW_KEY_NAME));
+                    }
+                    if (getKey() != null && getKey().trim().length() > 0) {
+                        dataList.addBinderProperty(Userview.USERVIEW_KEY_VALUE, getKey());
+                    }
+
+                    return this.dataList = dataList;
+                });
     }
 
     protected DataListBinder getDataListBinder() {
@@ -210,7 +233,15 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
      */
     protected DataListAction[] getDataListRowActions() {
         final List<DataListAction> dataListActionList = new ArrayList<>();
+
+        // edit button
         dataListActionList.add(getEditRowDataListAction());
+
+        // reset password button
+        if(getPropertyShowResetPasswordButton()) {
+            dataListActionList.add(getResetUserPasswordDataListAction());
+        }
+
         return dataListActionList.toArray(new DataListAction[0]);
     }
 
@@ -245,12 +276,27 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
         return action;
     }
 
+    protected DataListAction getResetUserPasswordDataListAction() {
+        final PluginManager pluginManager = (PluginManager)AppUtil.getApplicationContext().getBean("pluginManager");
+        final DataListAction action = (DataListAction)pluginManager.getPlugin(ResetUserPasswordDataListAction.class.getName());
+
+        action.setProperty("id", "USER_DIR_MENU_RESET_PASSWORD");
+        action.setProperty("label", getPropertyResetPasswordActionLabel());
+        action.setProperty("confirmation", getPropertyResetPasswordConfirmation());
+
+        return action;
+    }
+
     protected boolean isAddMode() {
         return "add".equalsIgnoreCase(getRequestParameterString("_mode")) || "edit".equals(getRequestParameterString("_mode")) && getPrimaryKey() == null;
     }
 
     protected boolean isEditMode() {
         return "edit".equals(getRequestParameterString("_mode")) && getPrimaryKey() != null;
+    }
+
+    protected boolean isResetMode() {
+        return "reset".equalsIgnoreCase(getRequestParameterString("_mode"));
     }
 
     protected String getPrimaryKey() {
@@ -260,9 +306,6 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
     protected void viewList() {
         try {
             final DataList dataList = getDataList();
-//            dataList.setActionPosition(getPropertyString("buttonPosition"));
-//            dataList.setSelectionType(getPropertyString("selectionType"));
-//            dataList.setCheckboxPosition(getPropertyString("checkboxPosition"));
 
             // set current datalist
             setProperty("dataList", dataList);
@@ -412,6 +455,18 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
 
     protected String getPropertyListCustomFooter() {
         return AppUtil.processHashVariable(getPropertyString("list-customFooter"), null, null, null);
+    }
+
+    protected boolean getPropertyShowResetPasswordButton() {
+        return "true".equalsIgnoreCase(getPropertyString("allowResetPasswordButton"));
+    }
+
+    protected String getPropertyResetPasswordActionLabel() {
+        return getPropertyString("resetPasswordActionLabel");
+    }
+
+    protected String getPropertyResetPasswordConfirmation() {
+        return getPropertyString("resetPasswordConfirmation");
     }
 
     protected Form submitDataForm(FormData formData, Form form) {

@@ -4,7 +4,6 @@ import com.kinnarastudio.commons.Try;
 import org.apache.commons.text.RandomStringGenerator;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.commons.util.*;
-import org.joget.directory.dao.UserDao;
 import org.joget.directory.dao.UserSaltDao;
 import org.joget.directory.model.User;
 import org.joget.directory.model.UserSalt;
@@ -21,7 +20,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface PasswordUtilMixin {
-    default User updatePassword(final User user) throws NoSuchAlgorithmException, InvalidKeySpecException {
+    default User generatePassword(final User user) throws NoSuchAlgorithmException, InvalidKeySpecException {
         final ApplicationContext applicationContext = AppUtil.getApplicationContext();
         final UserSaltDao userSaltDao = (UserSaltDao) applicationContext.getBean("userSaltDao");
         final UserSecurity us = DirectoryUtil.getUserSecurity();
