@@ -1,23 +1,26 @@
 package com.kinnara.kecakplugins.usermaintenance.datalist;
 
 import com.kinnara.kecakplugins.usermaintenance.utils.PasswordUtilMixin;
+import com.kinnara.kecakplugins.usermaintenance.utils.StartProcessUtils;
 import com.kinnarastudio.commons.Try;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.datalist.model.DataList;
 import org.joget.apps.datalist.model.DataListActionDefault;
 import org.joget.apps.datalist.model.DataListActionResult;
+import org.joget.apps.datalist.model.DataListCollection;
 import org.joget.commons.util.LogUtil;
 import org.joget.directory.dao.UserDao;
 import org.joget.directory.model.User;
 import org.joget.workflow.util.WorkflowUtil;
 import org.springframework.context.ApplicationContext;
 
+import javax.annotation.Nonnull;
 import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-public class ResetUserPasswordDataListAction extends DataListActionDefault implements PasswordUtilMixin {
+public class ResetUserPasswordDataListAction extends DataListActionDefault implements PasswordUtilMixin, StartProcessUtils {
     @Override
     public String getLinkLabel() {
         return getPropertyString("label");
@@ -64,6 +67,9 @@ public class ResetUserPasswordDataListAction extends DataListActionDefault imple
         final ApplicationContext applicationContext = AppUtil.getApplicationContext();
         final UserDao userDao = (UserDao) applicationContext.getBean("userDao");
 
+        final DataListCollection<Map<String, String>> rows = dataList.getRows(Integer.MAX_VALUE, 0);
+        rows.sort(Comparator.comparing(m -> m.get(dataList.getBinder().getPrimaryKeyColumnName())));
+
         Arrays.stream(keys)
                 .distinct()
                 .map(userDao::getUser)
@@ -77,6 +83,13 @@ public class ResetUserPasswordDataListAction extends DataListActionDefault imple
 
                     final User updatedPassword = generatePassword(u);
                     userDao.updateUser(updatedPassword);
+
+                    final Map<String, String> row = getRow(dataList, rows, u.getId());
+                    final String processId = getPropertyString("processId");
+
+                    final Map<String, String> workflowVariables = getWorkflowVariables(row);
+                    workflowVariables.put(getPropertyString("passwordVariable"), password);
+                    startProcess(processId, workflowVariables);
                 }));
 
         final DataListActionResult result = new DataListActionResult();
@@ -122,5 +135,38 @@ public class ResetUserPasswordDataListAction extends DataListActionDefault imple
                 .map(HttpServletRequest::getMethod)
                 .map("POST"::equalsIgnoreCase)
                 .orElse(false);
+    }
+
+    protected Map<String, String> getWorkflowVariables(Map<String, String> row) {
+        return Optional.of("workflowVariables")
+                .map(this::getProperty)
+                .map(o -> (Object[])o)
+                .map(Arrays::stream)
+                .orElseGet(Stream::empty)
+                .map(o -> (Map<String, Object>)o)
+                .collect(Collectors.toMap(m -> AppUtil.processHashVariable(m.get("name").toString(), null, null, null), m -> {
+                    String field = String.valueOf(m.get("field"));
+                    String value = String.valueOf(m.get("value"));
+
+                    if(field.isEmpty()) {
+                        return AppUtil.processHashVariable(value, null, null, null);
+                    } else {
+                        return row.get(field);
+                    }
+                }));
+    }
+
+    @Nonnull
+    protected Map<String, String> getRow(DataList dataList, DataListCollection rows, String key) {
+        final String keyField = dataList.getBinder().getPrimaryKeyColumnName();
+        return Optional.ofNullable(rows)
+                .map(DataListCollection<Map<String, String>>::stream)
+                .orElseGet(Stream::empty)
+                .filter(m -> key.equals(m.get(keyField)))
+                .findFirst()
+                .orElseGet(HashMap::new);
+
+
+
     }
 }

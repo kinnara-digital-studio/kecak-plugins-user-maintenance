@@ -5,6 +5,8 @@ import com.kinnara.kecakplugins.usermaintenance.datalist.UserDirectoryDataListBi
 import com.kinnara.kecakplugins.usermaintenance.utils.Utils;
 import com.kinnarastudio.commons.Try;
 import com.kinnarastudio.commons.jsonstream.JSONCollectors;
+import com.kinnarastudio.commons.jsonstream.JSONMapper;
+import com.kinnarastudio.commons.jsonstream.JSONStream;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.datalist.lib.HyperlinkDataListAction;
 import org.joget.apps.datalist.model.*;
@@ -18,6 +20,7 @@ import org.joget.commons.util.StringUtil;
 import org.joget.plugin.base.PluginManager;
 import org.joget.workflow.util.WorkflowUtil;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.kecak.apps.userview.model.AceUserviewMenu;
 import org.kecak.apps.userview.model.BootstrapUserviewTheme;
@@ -117,7 +120,14 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
                 }))
                 .collect(JSONCollectors.toJSONArray());
 
-        return AppUtil.readPluginResource(getClassName(), "/properties/UserDirectoryMenu.json", new String[]{jsonColumns.toString()}, true, null);
+        try {
+            final JSONArray jsonPropertiesUserDirectoryMenu = new JSONArray(AppUtil.readPluginResource(getClassName(), "/properties/UserDirectoryMenu.json", new String[]{jsonColumns.toString()}, true, null));
+            final JSONArray jsonPropertiesResetUserPasswordDataListAction = new JSONArray(AppUtil.readPluginResource(getClassName(), "/properties/ResetUserPasswordDataListAction.json", null, true, null));
+            return JSONMapper.concat(jsonPropertiesUserDirectoryMenu, jsonPropertiesResetUserPasswordDataListAction)
+                    .toString();
+        } catch (JSONException e) {
+            return AppUtil.readPluginResource(getClassName(), "/properties/UserDirectoryMenu.json", new String[]{jsonColumns.toString()}, true, null);
+        }
     }
 
     @Override
@@ -183,16 +193,24 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
                     }
 
                     // add row action
-                    dataList.setRowActions(new DataListAction[0]);
-                    for (DataListAction rowAction : getDataListRowActions()) {
-                        dataList.addDataListAction(rowAction.getClassName(), DataList.DATALIST_ROW_ACTION, rowAction.getProperties());
-                    }
+                    dataList.setRowActions(getDataListRowActions());
+//                    dataList.setActions(new DataListAction[0]);
+//
+//                    for (DataListAction rowAction : getDataListRowActions()) {
+//                        dataList.addDataListAction(rowAction.getClassName(), DataList.DATALIST_ROW_ACTION, rowAction.getProperties());
+//                    }
 
-                    // add action
-                    dataList.setActions(new DataListAction[0]);
-                    for (DataListAction action : getDataListActions()) {
-                        dataList.addDataListAction(action.getClassName(), DataList.DATALIST_ROW_ACTION, action.getProperties());
-                    }
+                    dataList.setActions(getDataListActions());
+//                    {
+//                        final Map<String, Object> actionProperties = new HashMap<>();
+//                        final String url = getUrl();
+//                        actionProperties.put("id", "USER_DIR_MENU_ADD_USER");
+//                        actionProperties.put("label", !getPropertyString("list-addLinkLabel").isEmpty() ? getPropertyString("list-addLinkLabel") : "Add");
+//                        actionProperties.put("href", addParamToUrl(url, "_mode", "edit"));
+//                        actionProperties.put("hrefParam", "");
+//                        actionProperties.put("hrefColumn", "");
+//                        dataList.addDataListAction(HyperlinkDataListAction.class.getName(), "action", actionProperties);
+//                    }
 
                     dataList.setFilters(getDataListFilters());
 
@@ -253,10 +271,12 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
         final DataListAction action = (DataListAction)pluginManager.getPlugin(HyperlinkDataListAction.class.getName());
 
         final String url = getUrl();
+        action.setProperty("id", "ADD_USER");
         action.setProperty("label", !getPropertyString("list-addLinkLabel").isEmpty() ? getPropertyString("list-addLinkLabel") : "Add");
         action.setProperty("href", addParamToUrl(url, "_mode", "edit"));
-        action.setProperty("hrefParam", "");
-        action.setProperty("hrefColumn", "");
+        action.setProperty("hrefParam", "id");
+        action.setProperty("hrefColumn", "id");
+        action.setProperty("visible", "true");
 
         return action;
     }
@@ -286,6 +306,9 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
         action.setProperty("id", "USER_DIR_MENU_RESET_PASSWORD");
         action.setProperty("label", getPropertyResetPasswordActionLabel());
         action.setProperty("confirmation", getPropertyResetPasswordConfirmation());
+        action.setProperty("processId", getProperty("processId"));
+        action.setProperty("workflowVariables", getProperty("workflowVariables"));
+        action.setProperty("passwordVariable", getProperty("passwordVariable"));
 
         return action;
     }
