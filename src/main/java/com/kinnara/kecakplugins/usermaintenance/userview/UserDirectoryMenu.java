@@ -294,7 +294,7 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
     }
 
     protected boolean isAddMode() {
-        return "add".equalsIgnoreCase(getRequestParameterString("_mode")) || "edit".equals(getRequestParameterString("_mode")) && getPrimaryKey() == null;
+        return "add".equalsIgnoreCase(getRequestParameterString("_mode"));
     }
 
     protected boolean isEditMode() {
