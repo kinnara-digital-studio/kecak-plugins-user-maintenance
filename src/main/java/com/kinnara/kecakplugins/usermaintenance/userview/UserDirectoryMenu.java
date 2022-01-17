@@ -290,11 +290,6 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
         action.setProperty("workflowVariables", getProperty("workflowVariables"));
         action.setProperty("passwordVariable", getProperty("passwordVariable"));
 
-//        final String url = getUrl();
-//        action.setProperty("href", addParamToUrl(url, "", ""));
-//        action.setProperty("hrefParam", "id");
-//        action.setProperty("hrefColumn", "id");
-
         return action;
     }
 
