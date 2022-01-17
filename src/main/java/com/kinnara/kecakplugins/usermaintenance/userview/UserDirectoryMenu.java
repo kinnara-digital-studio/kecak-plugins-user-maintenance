@@ -6,7 +6,6 @@ import com.kinnara.kecakplugins.usermaintenance.utils.Utils;
 import com.kinnarastudio.commons.Try;
 import com.kinnarastudio.commons.jsonstream.JSONCollectors;
 import com.kinnarastudio.commons.jsonstream.JSONMapper;
-import com.kinnarastudio.commons.jsonstream.JSONStream;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.datalist.lib.HyperlinkDataListAction;
 import org.joget.apps.datalist.model.*;
@@ -123,8 +122,8 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
         try {
             final JSONArray jsonPropertiesUserDirectoryMenu = new JSONArray(AppUtil.readPluginResource(getClassName(), "/properties/UserDirectoryMenu.json", new String[]{jsonColumns.toString()}, true, null));
             final JSONArray jsonPropertiesResetUserPasswordDataListAction = new JSONArray(AppUtil.readPluginResource(getClassName(), "/properties/ResetUserPasswordDataListAction.json", null, true, null));
-            return JSONMapper.concat(jsonPropertiesUserDirectoryMenu, jsonPropertiesResetUserPasswordDataListAction)
-                    .toString();
+            return JSONMapper.concat(jsonPropertiesUserDirectoryMenu,
+                    jsonPropertiesResetUserPasswordDataListAction).toString();
         } catch (JSONException e) {
             return AppUtil.readPluginResource(getClassName(), "/properties/UserDirectoryMenu.json", new String[]{jsonColumns.toString()}, true, null);
         }
@@ -182,9 +181,6 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
                     dataList.setShowPageSizeSelector(true);
                     dataList.setDefaultOrder(getPropertyOrder());
                     dataList.setDefaultSortColumn(getPropertyOrderBy());
-                    dataList.setActionPosition(getPropertyString("buttonPosition"));
-                    dataList.setSelectionType(getPropertyString("selectionType"));
-                    dataList.setCheckboxPosition(getPropertyString("checkboxPosition"));
 
                     {
                         final DataListBinder binder = getDataListBinder();
@@ -192,27 +188,11 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
                         dataList.setColumns(binder.getColumns());
                     }
 
-                    // add row action
                     dataList.setRowActions(getDataListRowActions());
-//                    dataList.setActions(new DataListAction[0]);
-//
-//                    for (DataListAction rowAction : getDataListRowActions()) {
-//                        dataList.addDataListAction(rowAction.getClassName(), DataList.DATALIST_ROW_ACTION, rowAction.getProperties());
-//                    }
-
                     dataList.setActions(getDataListActions());
-//                    {
-//                        final Map<String, Object> actionProperties = new HashMap<>();
-//                        final String url = getUrl();
-//                        actionProperties.put("id", "USER_DIR_MENU_ADD_USER");
-//                        actionProperties.put("label", !getPropertyString("list-addLinkLabel").isEmpty() ? getPropertyString("list-addLinkLabel") : "Add");
-//                        actionProperties.put("href", addParamToUrl(url, "_mode", "edit"));
-//                        actionProperties.put("hrefParam", "");
-//                        actionProperties.put("hrefColumn", "");
-//                        dataList.addDataListAction(HyperlinkDataListAction.class.getName(), "action", actionProperties);
-//                    }
-
                     dataList.setFilters(getDataListFilters());
+                    dataList.setSelectionType("single");
+                    dataList.setCheckboxPosition("no"); // disable checkbox
 
                     if (getPropertyString(Userview.USERVIEW_KEY_NAME) != null && getPropertyString(Userview.USERVIEW_KEY_NAME).trim().length() > 0) {
                         dataList.addBinderProperty(Userview.USERVIEW_KEY_NAME, getPropertyString(Userview.USERVIEW_KEY_NAME));
@@ -259,7 +239,7 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
         dataListActionList.add(getEditRowDataListAction());
 
         // reset password button
-        if(getPropertyShowResetPasswordButton()) {
+        if (getPropertyShowResetPasswordButton()) {
             dataListActionList.add(getResetUserPasswordDataListAction());
         }
 
@@ -267,15 +247,15 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
     }
 
     protected DataListAction getAddRecordDataListAction() {
-        final PluginManager pluginManager = (PluginManager)AppUtil.getApplicationContext().getBean("pluginManager");
-        final DataListAction action = (DataListAction)pluginManager.getPlugin(HyperlinkDataListAction.class.getName());
+        final PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
+        final DataListAction action = (DataListAction) pluginManager.getPlugin(HyperlinkDataListAction.class.getName());
 
-        final String url = getUrl();
-        action.setProperty("id", "ADD_USER");
+        final String url = getUrl().replaceAll("\\?.+", "");
+        action.setProperty("id", "USER_DIR_MENU_ADD_USER");
         action.setProperty("label", !getPropertyString("list-addLinkLabel").isEmpty() ? getPropertyString("list-addLinkLabel") : "Add");
-        action.setProperty("href", addParamToUrl(url, "_mode", "edit"));
-        action.setProperty("hrefParam", "id");
-        action.setProperty("hrefColumn", "id");
+        action.setProperty("href", addParamToUrl(url, "_mode", "add"));
+        action.setProperty("hrefParam", "");
+        action.setProperty("hrefColumn", "");
         action.setProperty("visible", "true");
 
         return action;
@@ -287,10 +267,10 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
      * @return
      */
     protected DataListAction getEditRowDataListAction() {
-        final PluginManager pluginManager = (PluginManager)AppUtil.getApplicationContext().getBean("pluginManager");
-        final DataListAction action = (DataListAction)pluginManager.getPlugin(HyperlinkDataListAction.class.getName());
+        final PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
+        final DataListAction action = (DataListAction) pluginManager.getPlugin(HyperlinkDataListAction.class.getName());
 
-        final String url = getUrl();
+        final String url = getUrl().replaceAll("\\?.+", "");
         action.setProperty("label", !getPropertyString("list-editLinkLabel").isEmpty() ? getPropertyString("list-editLinkLabel") : "Edit");
         action.setProperty("href", addParamToUrl(url, "_mode", "edit"));
         action.setProperty("hrefParam", "id");
@@ -300,8 +280,8 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
     }
 
     protected DataListAction getResetUserPasswordDataListAction() {
-        final PluginManager pluginManager = (PluginManager)AppUtil.getApplicationContext().getBean("pluginManager");
-        final DataListAction action = (DataListAction)pluginManager.getPlugin(ResetUserPasswordDataListAction.class.getName());
+        final PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
+        final DataListAction action = (DataListAction) pluginManager.getPlugin(ResetUserPasswordDataListAction.class.getName());
 
         action.setProperty("id", "USER_DIR_MENU_RESET_PASSWORD");
         action.setProperty("label", getPropertyResetPasswordActionLabel());
@@ -309,6 +289,11 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
         action.setProperty("processId", getProperty("processId"));
         action.setProperty("workflowVariables", getProperty("workflowVariables"));
         action.setProperty("passwordVariable", getProperty("passwordVariable"));
+
+//        final String url = getUrl();
+//        action.setProperty("href", addParamToUrl(url, "", ""));
+//        action.setProperty("hrefParam", "id");
+//        action.setProperty("hrefColumn", "id");
 
         return action;
     }
@@ -392,7 +377,7 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
 
         final String url = getUrl();
         final String formUrl = addParamToUrl(addParamToUrl(addParamToUrl(url, "_action", "submit"), "_mode", mode), "id", id);
-        final Form form = Utils.viewDataForm("displayUser-" + getPropertyString("id"), "Submit",  "Back", formData, formUrl, url, mode);
+        final Form form = Utils.viewDataForm("displayUser-" + getPropertyString("id"), "Submit", "Back", formData, formUrl, url, mode);
 
         final String formHtml = formService.retrieveFormHtml(form, formData);
         final String formJson = formService.generateElementJson(form);
@@ -410,7 +395,7 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
         final FormData formData = new FormData();
         formData.setPrimaryKeyValue(id);
 
-        final Form form = submitDataForm(formData, Utils.viewDataForm("submitUser-" + getPropertyString("id"), "Submit",  "Back", formData, "", "", ""));
+        final Form form = submitDataForm(formData, Utils.viewDataForm("submitUser-" + getPropertyString("id"), "Submit", "Back", formData, "", "", ""));
         if (form != null) {
             String formHtml;
             Map errors = formData.getFormErrors();
@@ -471,7 +456,7 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
     protected int getPropertyPageSize() {
         try {
             return Integer.parseInt(getPropertyString("pageSize"));
-        }catch (NumberFormatException e) {
+        } catch (NumberFormatException e) {
             return 10;
         }
     }

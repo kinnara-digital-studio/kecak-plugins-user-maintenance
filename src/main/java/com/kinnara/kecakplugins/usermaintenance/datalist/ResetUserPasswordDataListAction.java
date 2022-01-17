@@ -70,7 +70,10 @@ public class ResetUserPasswordDataListAction extends DataListActionDefault imple
         final DataListCollection<Map<String, String>> rows = dataList.getRows(Integer.MAX_VALUE, 0);
         rows.sort(Comparator.comparing(m -> m.get(dataList.getBinder().getPrimaryKeyColumnName())));
 
-        Arrays.stream(keys)
+        Optional.ofNullable(keys)
+                .map(Arrays::stream)
+                .orElseGet(Stream::empty)
+                .filter(Objects::nonNull)
                 .distinct()
                 .map(userDao::getUser)
                 .filter(Objects::nonNull)
@@ -93,7 +96,7 @@ public class ResetUserPasswordDataListAction extends DataListActionDefault imple
                 }));
 
         final DataListActionResult result = new DataListActionResult();
-        result.setUrl("REFERER");
+        result.setUrl(getRedirectUrl());
         result.setType(DataListActionResult.TYPE_REDIRECT);
         return result;
     }
@@ -140,15 +143,15 @@ public class ResetUserPasswordDataListAction extends DataListActionDefault imple
     protected Map<String, String> getWorkflowVariables(Map<String, String> row) {
         return Optional.of("workflowVariables")
                 .map(this::getProperty)
-                .map(o -> (Object[])o)
+                .map(o -> (Object[]) o)
                 .map(Arrays::stream)
                 .orElseGet(Stream::empty)
-                .map(o -> (Map<String, Object>)o)
+                .map(o -> (Map<String, Object>) o)
                 .collect(Collectors.toMap(m -> AppUtil.processHashVariable(m.get("name").toString(), null, null, null), m -> {
                     String field = String.valueOf(m.get("field"));
                     String value = String.valueOf(m.get("value"));
 
-                    if(field.isEmpty()) {
+                    if (field.isEmpty()) {
                         return AppUtil.processHashVariable(value, null, null, null);
                     } else {
                         return row.get(field);
@@ -165,8 +168,16 @@ public class ResetUserPasswordDataListAction extends DataListActionDefault imple
                 .filter(m -> key.equals(m.get(keyField)))
                 .findFirst()
                 .orElseGet(HashMap::new);
+    }
 
+    protected String getRedirectUrl() {
+        final HttpServletRequest request = WorkflowUtil.getHttpServletRequest();
+        return Optional.ofNullable(request)
+                .map(r -> r.getHeader("Referer"))
 
+                // delete action parameter
+                .map(s -> s.replaceAll("d-[0-9]+-ac=\\w+&?", ""))
 
+                .orElse("REFERER");
     }
 }
