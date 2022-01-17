@@ -5,7 +5,6 @@ import com.kinnara.kecakplugins.usermaintenance.datalist.UserDirectoryDataListBi
 import com.kinnara.kecakplugins.usermaintenance.utils.Utils;
 import com.kinnarastudio.commons.Try;
 import com.kinnarastudio.commons.jsonstream.JSONCollectors;
-import org.joget.apps.app.lib.EmailTool;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.datalist.lib.HyperlinkDataListAction;
 import org.joget.apps.datalist.model.*;
@@ -15,7 +14,6 @@ import org.joget.apps.form.service.FormService;
 import org.joget.apps.form.service.FormUtil;
 import org.joget.apps.userview.model.Userview;
 import org.joget.apps.userview.model.UserviewMenu;
-import org.joget.commons.util.LogUtil;
 import org.joget.commons.util.StringUtil;
 import org.joget.plugin.base.PluginManager;
 import org.joget.workflow.util.WorkflowUtil;
@@ -184,12 +182,18 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
                         dataList.setColumns(binder.getColumns());
                     }
 
+                    // add row action
                     dataList.setRowActions(new DataListAction[0]);
                     for (DataListAction rowAction : getDataListRowActions()) {
                         dataList.addDataListAction(rowAction.getClassName(), DataList.DATALIST_ROW_ACTION, rowAction.getProperties());
                     }
 
-                    dataList.setActions(getDataListActions());
+                    // add action
+                    dataList.setActions(new DataListAction[0]);
+                    for (DataListAction action : getDataListActions()) {
+                        dataList.addDataListAction(action.getClassName(), DataList.DATALIST_ROW_ACTION, action.getProperties());
+                    }
+
                     dataList.setFilters(getDataListFilters());
 
                     if (getPropertyString(Userview.USERVIEW_KEY_NAME) != null && getPropertyString(Userview.USERVIEW_KEY_NAME).trim().length() > 0) {

@@ -65,6 +65,7 @@ public class ResetUserPasswordDataListAction extends DataListActionDefault imple
         final UserDao userDao = (UserDao) applicationContext.getBean("userDao");
 
         Arrays.stream(keys)
+                .distinct()
                 .map(userDao::getUser)
                 .filter(Objects::nonNull)
                 .forEach(Try.onConsumer(u -> {
