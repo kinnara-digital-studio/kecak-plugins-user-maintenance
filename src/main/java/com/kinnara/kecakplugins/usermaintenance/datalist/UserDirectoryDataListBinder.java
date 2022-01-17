@@ -88,11 +88,7 @@ public class UserDirectoryDataListBinder extends DataListBinderDefault {
 
     @Override
     public String getPropertyOptions() {
-        return AppUtil.readPluginResource(getClass().getName(), "/properties/UserDirectoryDataListBinder.json");
-    }
-
-    protected boolean isHideAdminRole() {
-        return "true".equalsIgnoreCase(getPropertyString("hideAdminRole"));
+        return "";
     }
 
     protected String filter(DataListFilterQueryObject[] filters) {
