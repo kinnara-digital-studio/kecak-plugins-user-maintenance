@@ -104,41 +104,34 @@ public class ProfileMenu extends UserviewMenu implements AceUserviewMenu {
                 LogUtil.error(getClassName(), e, e.getMessage());
 			}
         } else {
-            try {
-				displayForm();
-			} catch (UnsupportedEncodingException e) {
-                LogUtil.error(getClassName(), e, e.getMessage());
-			}
+            displayForm();
 
         }
 
         return jspFile;
 	}
 
-	private void displayForm() throws UnsupportedEncodingException {
-		final ApplicationContext applicationContext = AppUtil.getApplicationContext();
-
-        WorkflowManager workflowManager = (WorkflowManager) applicationContext.getBean("workflowManager");
-        String currentUser = workflowManager.getWorkflowUserManager().getCurrentUsername();
+    protected void displayForm() {
+        final String id = WorkflowUtil.getCurrentUsername();
+        final String mode = "edit";
+        final ApplicationContext applicationContext = AppUtil.getApplicationContext();
+        final FormService formService = (FormService) applicationContext.getBean("formService");
 
         FormData formData = new FormData();
-        formData.setPrimaryKeyValue(currentUser);
-		String mode = "edit";
-		
-        String formUrl = addParamToUrl(getUrl(), "_mode", mode) + "&_action=submit" + "&id=" + URLEncoder.encode(currentUser, "UTF-8");
+        formData.setPrimaryKeyValue(id);
+        formData = formService.retrieveFormDataFromRequestMap(formData, getRequestParameters());
 
-		Form form = Utils.viewDataForm("userProfile", "Submit", "Cancel", formData, formUrl, getUrl(), mode);
+        final String url = getUrl();
+        final String formUrl = addParamToUrl(addParamToUrl(addParamToUrl(url, "_action", "submit"), "_mode", mode), "id", id);
+        final Form form = Utils.viewDataForm("profile-" + getPropertyString("id"), "Submit", "Back", formData, formUrl, url, mode);
 
-		FormService formService = (FormService) applicationContext.getBean("formService");
+        final String formHtml = formService.retrieveFormHtml(form, formData);
+        final String formJson = formService.generateElementJson(form);
 
-		String formHtml = formService.generateElementHtml(form, formData);
-		String formJson = formService.generateElementJson(form);
-		
-		this.setProperty("view", "formView");
-		this.setProperty("appDef", AppUtil.getCurrentAppDefinition());
-		this.setProperty("formHtml", formHtml);
-		this.setProperty("formJson", formJson);
-	}
+        setProperty("view", "formView");
+        setProperty("formHtml", formHtml);
+        setProperty("formJson", formJson);
+    }
 
 	private void submitForm() throws UnsupportedEncodingException {
 		ApplicationContext applicationContext = AppUtil.getApplicationContext();
