@@ -1,6 +1,6 @@
-package com.kinnara.kecakplugins.usermaintenance;
+package com.kinnarastudio.kecakplugins.usermaintenance;
 
-import com.kinnara.kecakplugins.usermaintenance.process.GeneratePasswordTool;
+import com.kinnarastudio.kecakplugins.usermaintenance.process.GeneratePasswordTool;
 
 /**
  * @author aristo

@@ -1,6 +1,6 @@
-package com.kinnara.kecakplugins.usermaintenance.utils;
+package com.kinnarastudio.kecakplugins.usermaintenance.utils;
 
-import com.kinnara.kecakplugins.usermaintenance.form.UserDirectoryFormBinder;
+import com.kinnarastudio.kecakplugins.usermaintenance.form.UserDirectoryFormBinder;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.lib.LinkButton;
 import org.joget.apps.form.lib.PasswordField;
@@ -23,7 +23,9 @@ public class Utils {
         Form form = new Form();
         form.setProperty(FormUtil.PROPERTY_ID, formDefId);
         form.setLoadBinder(new UserDirectoryFormBinder());
-        form.setStoreBinder(new UserDirectoryFormBinder());
+        form.setStoreBinder(new UserDirectoryFormBinder() {{
+            setCheckPassword(true);
+        }});
 
         final Collection<Element> children = Stream.of("id")
                 .filter(s -> "add".equalsIgnoreCase(mode))
@@ -94,7 +96,7 @@ public class Utils {
             Element submitButton = (Element) pluginManager.getPlugin(SubmitButton.class.getName());
             submitButton.setProperty(FormUtil.PROPERTY_ID, "submit");
             submitButton.setProperty("label", submitButtonLabel);
-            form.addAction((FormAction) submitButton, formData);
+            form.addAction((FormAction) submitButton);
         }
 
         if (cancelButtonLabel != null) {
@@ -106,7 +108,7 @@ public class Utils {
             cancelButton.setProperty("label", cancelButtonLabel);
             cancelButton.setProperty("url", cancelUrl);
             cancelButton.setProperty("target", "window");
-            form.addAction((FormAction) cancelButton, formData);
+            form.addAction((FormAction) cancelButton);
         }
 
         form = decorateFormActions(form);

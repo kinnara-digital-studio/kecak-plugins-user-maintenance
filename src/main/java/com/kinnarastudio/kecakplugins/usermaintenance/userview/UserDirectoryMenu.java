@@ -1,8 +1,8 @@
-package com.kinnara.kecakplugins.usermaintenance.userview;
+package com.kinnarastudio.kecakplugins.usermaintenance.userview;
 
-import com.kinnara.kecakplugins.usermaintenance.datalist.ResetUserPasswordDataListAction;
-import com.kinnara.kecakplugins.usermaintenance.datalist.UserDirectoryDataListBinder;
-import com.kinnara.kecakplugins.usermaintenance.utils.Utils;
+import com.kinnarastudio.kecakplugins.usermaintenance.datalist.ResetUserPasswordDataListAction;
+import com.kinnarastudio.kecakplugins.usermaintenance.datalist.UserDirectoryDataListBinder;
+import com.kinnarastudio.kecakplugins.usermaintenance.utils.Utils;
 import com.kinnarastudio.commons.Try;
 import com.kinnarastudio.commons.jsonstream.JSONCollectors;
 import com.kinnarastudio.commons.jsonstream.JSONMapper;
@@ -21,8 +21,6 @@ import org.joget.workflow.util.WorkflowUtil;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.kecak.apps.userview.model.AceUserviewMenu;
-import org.kecak.apps.userview.model.BootstrapUserviewTheme;
 import org.springframework.context.ApplicationContext;
 
 import javax.annotation.Nonnull;
@@ -36,7 +34,7 @@ import java.util.stream.Stream;
 /**
  * @author aristo
  */
-public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
+public class UserDirectoryMenu extends UserviewMenu  {
     @Nullable
     private DataList dataList = null;
 
@@ -132,21 +130,6 @@ public class UserDirectoryMenu extends UserviewMenu implements AceUserviewMenu {
     @Override
     public String getJspPage() {
         return getJspPage("userview/plugin/datalist.jsp", "userview/plugin/form.jsp", "userview/plugin/unauthorized.jsp");
-    }
-
-    @Override
-    public String getAceJspPage(BootstrapUserviewTheme bootstrapUserviewTheme) {
-        return getJspPage(bootstrapUserviewTheme.getDataListJsp(), bootstrapUserviewTheme.getFormJsp(), bootstrapUserviewTheme.getUnauthorizedJsp());
-    }
-
-    @Override
-    public String getAceRenderPage() {
-        return getRenderPage();
-    }
-
-    @Override
-    public String getAceDecoratedMenu() {
-        return getDecoratedMenu();
     }
 
     protected String getJspPage(String dataListFile, String formFile, String unauthorizedFile) {

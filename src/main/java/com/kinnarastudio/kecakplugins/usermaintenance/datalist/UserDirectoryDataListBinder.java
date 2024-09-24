@@ -1,14 +1,18 @@
-package com.kinnara.kecakplugins.usermaintenance.datalist;
+package com.kinnarastudio.kecakplugins.usermaintenance.datalist;
 
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.datalist.model.*;
 import org.joget.directory.dao.UserDao;
+import org.joget.plugin.base.PluginManager;
 import org.springframework.context.ApplicationContext;
 
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * Load list of user
+ */
 public class UserDirectoryDataListBinder extends DataListBinderDefault {
     @Override
     public DataListColumn[] getColumns() {
@@ -18,7 +22,7 @@ public class UserDirectoryDataListBinder extends DataListBinderDefault {
                 new DataListColumn("firstName", "First Name", true),
                 new DataListColumn("lastName", "Last Name", true),
                 new DataListColumn("email", "Email", true),
-                new DataListColumn("telephone_number", "Telephone", true)
+                new DataListColumn("phoneNumber", "Telephone", true)
         };
     }
 
@@ -43,12 +47,8 @@ public class UserDirectoryDataListBinder extends DataListBinderDefault {
                     record.put("lastName", r.getLastName());
                     record.put("email", r.getEmail());
                     record.put("timeZone", r.getTimeZone());
-                    record.put("telephone_number", r.getTelephoneNumber());
+                    record.put("phoneNumber", r.getTelephoneNumber());
                     record.put("active", r.getActive());
-                    record.put("dateCreated", r.getDateCreated());
-                    record.put("dateModified", r.getDateModified());
-                    record.put("createdBy", r.getCreatedBy());
-                    record.put("modifiedBy", r.getModifiedBy());
                     return record;
                 })
                 .collect(Collectors.toCollection(DataListCollection::new));
@@ -68,7 +68,10 @@ public class UserDirectoryDataListBinder extends DataListBinderDefault {
 
     @Override
     public String getVersion() {
-        return getClass().getPackage().getImplementationVersion();
+        PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
+        ResourceBundle resourceBundle = pluginManager.getPluginMessageBundle(getClassName(), "/messages/BuildNumber");
+        String buildNumber = resourceBundle.getString("buildNumber");
+        return buildNumber;
     }
 
     @Override
@@ -93,8 +96,8 @@ public class UserDirectoryDataListBinder extends DataListBinderDefault {
 
     protected String filter(DataListFilterQueryObject[] filters) {
         return Optional.ofNullable(filters)
-                .map(Arrays::stream)
-                .orElseGet(Stream::empty)
+                .stream()
+                .flatMap(Arrays::stream)
                 .map(DataListFilterQueryObject::getValues)
                 .flatMap(Arrays::stream)
                 .filter(s -> !s.isEmpty())

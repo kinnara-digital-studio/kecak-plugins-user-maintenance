@@ -1,0 +1,322 @@
+{
+  "id": "userDirectoryList",
+  "name": "User Directory",
+  "pageSize": "50",
+  "order": "",
+  "orderBy": "",
+  "showPageSizeSelector": "true",
+  "pageSizeSelectorOptions": "10,20,30,40,50,100",
+  "buttonPosition": "bottomLeft",
+  "checkboxPosition": "left",
+  "useSession": "false",
+  "hidePageSize": "",
+  "description": "",
+  "permission":
+  {
+    "className": "com.kinnarastudio.kecakplugins.rolemanagement.RoleManagementPermission",
+    "properties":
+    {
+      "authObject": "DATALIST_MASTER_USER"
+    }
+  },
+  "rowActions":
+  [
+    {
+      "name": "Start Process1.0.0",
+      "className": "com.kinnarastudio.kecakplugins.startprocess.StartProcessDataListAction",
+      "label": "Start Process",
+      "type": "text",
+      "id": "rowAction_0",
+      "properties":
+      {
+        "label": "Reset Password",
+        "confirmation": "Password akan dikirim melalui email",
+        "processId": "resetPassword",
+        "workflowVariables":
+        [
+          {
+            "name": "username",
+            "value": "",
+            "field": "id"
+          }
+        ],
+        "formDefId": "",
+        "fieldToStoreProcessId": "",
+        "href": "",
+        "target": "_self",
+        "parameterAssignment": "",
+        "permission":
+        {
+          "className": "",
+          "properties":
+          {}
+        },
+        "rules":
+        []
+      }
+    },
+    {
+      "name": "Start Process1.0.0",
+      "className": "com.kinnarastudio.kecakplugins.startprocess.StartProcessDataListAction",
+      "label": "Start Process",
+      "type": "text",
+      "id": "rowAction_1",
+      "properties":
+      {
+        "label": "Toggle Activation",
+        "confirmation": "",
+        "processId": "toggleUserActivation",
+        "workflowVariables":
+        [
+          {
+            "name": "username",
+            "value": "",
+            "field": "id"
+          },
+          {
+            "name": "status",
+            "value": "",
+            "field": "active"
+          }
+        ],
+        "formDefId": "",
+        "fieldToStoreProcessId": "",
+        "href": "",
+        "target": "_self",
+        "parameterAssignment": "",
+        "permission":
+        {
+          "className": "",
+          "properties":
+          {}
+        },
+        "rules":
+        []
+      }
+    }
+  ],
+  "actions":
+  [],
+  "filters":
+  [
+    {
+      "id": "filter_0",
+      "name": "id",
+      "filterParamName": "d-7652166-fn_id",
+      "label": "ID",
+      "type":
+      {
+        "className": "org.joget.apps.datalist.lib.TextFieldDataListFilterType",
+        "properties":
+        {
+          "defaultValue": "",
+          "exactMatch": ""
+        }
+      }
+    },
+    {
+      "id": "filter_1",
+      "name": "firstName",
+      "label": "Nama depan"
+    },
+    {
+      "id": "filter_2",
+      "name": "lastName",
+      "label": "Nama belakang"
+    },
+    {
+      "id": "filter_3",
+      "name": "email",
+      "label": "Email"
+    }
+  ],
+  "binder":
+  {
+    "className": "com.kinnarastudio.kecakplugins.directoryformbinder.UserDirectoryDataListBinder",
+    "properties":
+    {
+      "formDefId": "master_user",
+      "extraCondition": "",
+      "hideAdminRole": "true"
+    }
+  },
+  "columns":
+  [
+    {
+      "id": "column_2",
+      "name": "id",
+      "label": "ID",
+      "sortable": "false",
+      "hidden": "false",
+      "permission":
+      {
+        "className": null,
+        "properties":
+        {}
+      },
+      "exclude_export": "",
+      "width": "",
+      "style": "",
+      "action":
+      {
+        "className": "",
+        "properties":
+        {}
+      },
+      "format":
+      {
+        "className": null,
+        "properties":
+        {}
+      }
+    },
+    {
+      "id": "column_0",
+      "name": "firstName",
+      "label": "Name",
+      "sortable": "false",
+      "hidden": "false",
+      "permission":
+      {
+        "className": "",
+        "properties":
+        {}
+      },
+      "exclude_export": "",
+      "width": "",
+      "style": "",
+      "action":
+      {
+        "className": "",
+        "properties":
+        {}
+      },
+      "format":
+      {
+        "className": "com.kinnarastudio.kecakplugins.stringtoolsformatter.ConcatenationFormatter",
+        "properties":
+        {
+          "string1":
+          {
+            "className": "com.kinnarastudio.kecakplugins.compositecolumnformatter.OtherColumnFormatter",
+            "properties":
+            {
+              "field": "firstName",
+              "formatter":
+              {
+                "className": "",
+                "properties":
+                {}
+              }
+            }
+          },
+          "string2":
+          {
+            "className": "com.kinnarastudio.kecakplugins.compositecolumnformatter.OtherColumnFormatter",
+            "properties":
+            {
+              "field": "lastName",
+              "formatter":
+              {
+                "className": "",
+                "properties":
+                {}
+              }
+            }
+          },
+          "delimiter": ""
+        }
+      }
+    },
+    {
+      "id": "column_3",
+      "label": "Email",
+      "displayLabel": "Email",
+      "name": "email"
+    },
+    {
+      "id": "column_1",
+      "name": "id",
+      "label": "Username",
+      "sortable": "false",
+      "hidden": "false",
+      "permission":
+      {
+        "className": "",
+        "properties":
+        {}
+      },
+      "exclude_export": "",
+      "width": "",
+      "style": "",
+      "action":
+      {
+        "className": "",
+        "properties":
+        {}
+      },
+      "format":
+      {
+        "className": "",
+        "properties":
+        {}
+      }
+    },
+    {
+      "id": "column_4",
+      "label": "Phone",
+      "displayLabel": "Phone",
+      "name": "telephone_number"
+    },
+    {
+      "id": "column_5",
+      "name": "active",
+      "label": "Active",
+      "sortable": "false",
+      "hidden": "false",
+      "permission":
+      {
+        "className": "",
+        "properties":
+        {}
+      },
+      "exclude_export": "",
+      "width": "",
+      "style": "",
+      "action":
+      {
+        "className": "com.kinnarastudio.kecakplugins.startprocess.StartProcessDataListAction",
+        "properties":
+        {
+          "label": "Toggle",
+          "confirmation": "",
+          "processId": "toggleUserActivation",
+          "workflowVariables":
+          [
+            {
+              "name": "username",
+              "value": "",
+              "field": "id"
+            },
+            {
+              "name": "status",
+              "value": "",
+              "field": "active"
+            }
+          ],
+          "formDefId": "",
+          "fieldToStoreProcessId": "",
+          "href": "",
+          "target": "_self",
+          "parameterAssignment": ""
+        }
+      },
+      "format":
+      {
+        "className": "",
+        "properties":
+        {}
+      }
+    }
+  ]
+}

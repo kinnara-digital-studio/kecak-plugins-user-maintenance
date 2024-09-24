@@ -1,8 +1,7 @@
-package com.kinnara.kecakplugins.usermaintenance.process;
+package com.kinnarastudio.kecakplugins.usermaintenance.process;
 
-import com.kinnara.kecakplugins.usermaintenance.utils.PasswordUtilMixin;
+import com.kinnarastudio.kecakplugins.usermaintenance.utils.PasswordUtilMixin;
 import com.kinnarastudio.commons.Try;
-import org.joget.apps.app.lib.EmailTool;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.commons.util.LogUtil;
 import org.joget.directory.dao.UserDao;
@@ -14,6 +13,7 @@ import org.joget.workflow.model.service.WorkflowManager;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.ResourceBundle;
 
 /**
  * @author aristo
@@ -31,7 +31,10 @@ public class GeneratePasswordTool extends DefaultApplicationPlugin implements Pa
 
     @Override
     public String getVersion() {
-        return getClass().getPackage().getImplementationVersion();
+        PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
+        ResourceBundle resourceBundle = pluginManager.getPluginMessageBundle(getClassName(), "/messages/BuildNumber");
+        String buildNumber = resourceBundle.getString("buildNumber");
+        return buildNumber;
     }
 
     @Override
@@ -51,7 +54,7 @@ public class GeneratePasswordTool extends DefaultApplicationPlugin implements Pa
                 .map(String::valueOf)
                 .map(userDao::getUser)
                 .ifPresent(Try.onConsumer(u -> {
-                    final String password = generateRandomPassword(getDigits(props), isNumeric(), isUpperCase(), isLowerCase(), isSpecialCharacters());
+                    final String password = generateRandomPassword(getDigits(), isNumeric(), isUpperCase(), isLowerCase(), isSpecialCharacters());
                     u.setPassword(password);
                     u.setConfirmPassword(password);
 
@@ -67,7 +70,6 @@ public class GeneratePasswordTool extends DefaultApplicationPlugin implements Pa
                         workflowManager.processVariable(workflowAssignment.getProcessId(), varPassword, password);
                     }
                 }));
-
 
         return null;
     }
@@ -107,9 +109,9 @@ public class GeneratePasswordTool extends DefaultApplicationPlugin implements Pa
         return getPropertyString("passwordRules").contains("special");
     }
 
-    protected int getDigits(Map props) {
+    protected int getDigits() {
         return Optional.of("digits")
-                .map(props::get)
+                .map(this::getPropertyString)
                 .map(String::valueOf)
                 .map(Try.onFunction(Integer::parseInt))
                 .orElse(8);

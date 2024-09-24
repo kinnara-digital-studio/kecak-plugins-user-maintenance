@@ -1,6 +1,6 @@
-package com.kinnara.kecakplugins.usermaintenance.userview;
+package com.kinnarastudio.kecakplugins.usermaintenance.userview;
 
-import com.kinnara.kecakplugins.usermaintenance.utils.Utils;
+import com.kinnarastudio.kecakplugins.usermaintenance.utils.Utils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -16,12 +16,10 @@ import org.joget.commons.util.LogUtil;
 import org.joget.commons.util.StringUtil;
 import org.joget.workflow.model.service.WorkflowManager;
 import org.joget.workflow.util.WorkflowUtil;
-import org.kecak.apps.userview.model.AceUserviewMenu;
-import org.kecak.apps.userview.model.BootstrapUserviewTheme;
 import org.springframework.context.ApplicationContext;
 
 
-public class ProfileMenu extends UserviewMenu implements AceUserviewMenu {
+public class ProfileMenu extends UserviewMenu {
 
     @Override
     public String getLabel() {
@@ -182,20 +180,5 @@ public class ProfileMenu extends UserviewMenu implements AceUserviewMenu {
 
     protected <U, V extends U> U ifEmptyThen(V value, U ifEmpty) {
         return value == null || value.toString().isEmpty() ? ifEmpty : value;
-    }
-
-    @Override
-    public String getAceJspPage(BootstrapUserviewTheme bootstrapUserviewTheme) {
-        return getJspPage(bootstrapUserviewTheme.getFormJsp(), bootstrapUserviewTheme.getUnauthorizedJsp());
-    }
-
-    @Override
-    public String getAceRenderPage() {
-        return getRenderPage();
-    }
-
-    @Override
-    public String getAceDecoratedMenu() {
-        return getDecoratedMenu();
     }
 }

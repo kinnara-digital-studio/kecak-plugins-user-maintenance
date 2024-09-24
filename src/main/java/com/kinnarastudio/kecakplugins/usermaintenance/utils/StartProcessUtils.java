@@ -1,6 +1,6 @@
-package com.kinnara.kecakplugins.usermaintenance.utils;
+package com.kinnarastudio.kecakplugins.usermaintenance.utils;
 
-import com.kinnara.kecakplugins.usermaintenance.exceptions.StartProcessException;
+import com.kinnarastudio.kecakplugins.usermaintenance.exceptions.StartProcessException;
 import org.joget.apps.app.dao.FormDefinitionDao;
 import org.joget.apps.app.model.AppDefinition;
 import org.joget.apps.app.model.FormDefinition;

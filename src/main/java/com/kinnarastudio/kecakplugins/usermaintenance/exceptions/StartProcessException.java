@@ -1,4 +1,4 @@
-package com.kinnara.kecakplugins.usermaintenance.exceptions;
+package com.kinnarastudio.kecakplugins.usermaintenance.exceptions;
 
 public class StartProcessException extends Exception {
     public StartProcessException(String message) {

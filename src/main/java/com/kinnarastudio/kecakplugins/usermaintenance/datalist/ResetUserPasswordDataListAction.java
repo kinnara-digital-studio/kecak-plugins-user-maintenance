@@ -1,7 +1,7 @@
-package com.kinnara.kecakplugins.usermaintenance.datalist;
+package com.kinnarastudio.kecakplugins.usermaintenance.datalist;
 
-import com.kinnara.kecakplugins.usermaintenance.utils.PasswordUtilMixin;
-import com.kinnara.kecakplugins.usermaintenance.utils.StartProcessUtils;
+import com.kinnarastudio.kecakplugins.usermaintenance.utils.PasswordUtilMixin;
+import com.kinnarastudio.kecakplugins.usermaintenance.utils.StartProcessUtils;
 import com.kinnarastudio.commons.Try;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.datalist.model.DataList;
@@ -11,6 +11,8 @@ import org.joget.apps.datalist.model.DataListCollection;
 import org.joget.commons.util.LogUtil;
 import org.joget.directory.dao.UserDao;
 import org.joget.directory.model.User;
+import org.joget.plugin.base.DefaultApplicationPlugin;
+import org.joget.plugin.base.PluginManager;
 import org.joget.workflow.util.WorkflowUtil;
 import org.springframework.context.ApplicationContext;
 
@@ -62,8 +64,6 @@ public class ResetUserPasswordDataListAction extends DataListActionDefault imple
             return null;
         }
 
-        LogUtil.info(getClassName(), "executeAction");
-
         final ApplicationContext applicationContext = AppUtil.getApplicationContext();
         final UserDao userDao = (UserDao) applicationContext.getBean("userDao");
 
@@ -90,9 +90,19 @@ public class ResetUserPasswordDataListAction extends DataListActionDefault imple
                     final Map<String, String> row = getRow(dataList, rows, u.getId());
                     final String processId = getPropertyString("processId");
 
-                    final Map<String, String> workflowVariables = getWorkflowVariables(row);
-                    workflowVariables.put(getPropertyString("passwordVariable"), password);
-                    startProcess(processId, workflowVariables);
+                    if(executeToolAfterAction()) {
+                        PluginManager pluginManager = (PluginManager) applicationContext.getBean("pluginManager");
+                        Map<String, Object> pluginProperties = (Map<String, Object>)getProperty("postActionTool");
+                        if(pluginProperties != null) {
+                            pluginManager.execute((String) pluginProperties.get("className"), (Map) pluginProperties.get("properties"));
+                        }
+                    }
+
+                    if(startProcessAfterAction()) {
+                        final Map<String, String> workflowVariables = getWorkflowVariables(row);
+                        workflowVariables.put(getPropertyString("passwordVariable"), password);
+                        startProcess(processId, workflowVariables);
+                    }
                 }));
 
         final DataListActionResult result = new DataListActionResult();
@@ -108,7 +118,10 @@ public class ResetUserPasswordDataListAction extends DataListActionDefault imple
 
     @Override
     public String getVersion() {
-        return getClass().getPackage().getImplementationVersion();
+        PluginManager pluginManager = (PluginManager) AppUtil.getApplicationContext().getBean("pluginManager");
+        ResourceBundle resourceBundle = pluginManager.getPluginMessageBundle(getClassName(), "/messages/BuildNumber");
+        String buildNumber = resourceBundle.getString("buildNumber");
+        return buildNumber;
     }
 
     @Override
@@ -179,5 +192,13 @@ public class ResetUserPasswordDataListAction extends DataListActionDefault imple
                 .map(s -> s.replaceAll("d-[0-9]+-ac=\\w+&?", ""))
 
                 .orElse("REFERER");
+    }
+
+    protected boolean executeToolAfterAction() {
+        return "true".equalsIgnoreCase(getPropertyString("executeToolAfterAction"));
+    }
+
+    protected boolean startProcessAfterAction() {
+        return "true".equalsIgnoreCase(getPropertyString("startProcessAfterAction"));
     }
 }
