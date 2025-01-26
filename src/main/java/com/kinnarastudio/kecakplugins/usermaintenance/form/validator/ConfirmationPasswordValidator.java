@@ -31,16 +31,8 @@ public class ConfirmationPasswordValidator extends FormValidator {
 
         final String password = FormUtil.getRequestParameter(passwordElement, formData);
         final String plainPassword = SecurityUtil.decrypt(password);
-        if(password.isEmpty()) {
-            return true;
-        }
 
         final String confirmPassword = Arrays.stream(values).findFirst().orElse("");
-        if (confirmPassword.isEmpty()) {
-            formData.addFormError(elementId, "Field cannot be empty");
-            return false;
-        }
-
         final String plainConfirmPassword = SecurityUtil.decrypt(confirmPassword);
         if (!plainPassword.equals(plainConfirmPassword)) {
             final String errorMessage = getErrorMessage();
