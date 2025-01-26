@@ -1,4 +1,4 @@
-package com.kinnarastudio.kecakplugins.usermaintenance.process;
+package com.kinnarastudio.kecakplugins.usermaintenance.process.tool;
 
 import com.kinnarastudio.kecakplugins.usermaintenance.utils.PasswordUtilMixin;
 import com.kinnarastudio.commons.Try;
@@ -86,7 +86,7 @@ public class GeneratePasswordTool extends DefaultApplicationPlugin implements Pa
 
     @Override
     public String getPropertyOptions() {
-        return AppUtil.readPluginResource(getClassName(), "/properties/GeneratePasswordTool.json");
+        return AppUtil.readPluginResource(getClassName(), "/properties/process/tool/GeneratePasswordTool.json");
     }
 
     protected String getWorkflowVariableForPassword() {

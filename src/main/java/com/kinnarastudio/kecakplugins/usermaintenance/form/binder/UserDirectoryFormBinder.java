@@ -1,7 +1,6 @@
-package com.kinnarastudio.kecakplugins.usermaintenance.form;
+package com.kinnarastudio.kecakplugins.usermaintenance.form.binder;
 
 import com.kinnarastudio.commons.Try;
-import com.kinnarastudio.kecakplugins.usermaintenance.exceptions.PasswordException;
 import com.kinnarastudio.kecakplugins.usermaintenance.utils.PasswordUtilMixin;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.lib.DefaultFormBinder;
@@ -9,7 +8,6 @@ import org.joget.apps.form.model.*;
 import org.joget.apps.form.service.FormUtil;
 import org.joget.commons.util.SecurityUtil;
 import org.joget.directory.dao.EmploymentDao;
-import org.joget.directory.dao.OrganizationDao;
 import org.joget.directory.dao.UserDao;
 import org.joget.directory.model.Employment;
 import org.joget.directory.model.Organization;
@@ -20,7 +18,6 @@ import org.springframework.context.ApplicationContext;
 
 import javax.annotation.Nonnull;
 import java.util.*;
-import java.util.stream.Stream;
 
 /**
  * @author aristo
@@ -68,30 +65,28 @@ public class UserDirectoryFormBinder extends DefaultFormBinder implements FormLo
 
         return Optional.ofNullable(primaryKey)
                 .map(userDao::getUserById)
-                .map(user -> {
-                    final FormRow row = new FormRow();
-
-                    row.setId(user.getId());
-                    row.setProperty("username", Optional.ofNullable(user.getUsername()).orElse(""));
-                    row.setProperty("firstName", Optional.ofNullable(user.getFirstName()).orElse(""));
-                    row.setProperty("lastName", Optional.ofNullable(user.getLastName()).orElse(""));
-                    row.setProperty("email", Optional.ofNullable(user.getEmail()).orElse(""));
-                    row.setProperty("active", user.getActive() != 1 ? "false" : "true");
-                    row.setProperty("locale", Optional.ofNullable(user.getLocale()).orElse(""));
-                    row.setProperty("phoneNumber", Optional.ofNullable(user.getTelephoneNumber()).orElse(""));
-
-                    final FormRowSet result = new FormRowSet();
-                    result.add(row);
-                    return result;
-                })
-                .orElseGet(FormRowSet::new);
+                .map(user -> new FormRow() {{
+                    setId(user.getId());
+                    setProperty("username", Optional.ofNullable(user.getUsername()).orElse(""));
+                    setProperty("firstName", Optional.ofNullable(user.getFirstName()).orElse(""));
+                    setProperty("lastName", Optional.ofNullable(user.getLastName()).orElse(""));
+                    setProperty("email", Optional.ofNullable(user.getEmail()).orElse(""));
+                    setProperty("active", user.getActive() != 1 ? "false" : "true");
+                    setProperty("locale", Optional.ofNullable(user.getLocale()).orElse(""));
+                    setProperty("phoneNumber", Optional.ofNullable(user.getTelephoneNumber()).orElse(""));
+                    setProperty("password", "");
+                    setProperty("confirmPassword", "");
+                }})
+                .map(row -> new FormRowSet() {{
+                    add(row);
+                }})
+                .orElse(null);
     }
 
     @Override
     public FormRowSet store(Element element, FormRowSet originalRowSet, FormData formData) {
         final ApplicationContext applicationContext = AppUtil.getApplicationContext();
         final UserDao userDao = (UserDao) applicationContext.getBean("userDao");
-        final OrganizationDao organizationDao = (OrganizationDao) applicationContext.getBean("organizationDao");
 
         final Date now = new Date();
         final String currentUser = WorkflowUtil.getCurrentUsername();
@@ -136,7 +131,7 @@ public class UserDirectoryFormBinder extends DefaultFormBinder implements FormLo
                         user.setLocale(locale);
                         user.setTelephoneNumber(telephoneNumber);
 
-                        if(plainPassword == null || plainPassword.isEmpty()) {
+                        if (plainPassword == null || plainPassword.isEmpty()) {
                             // do not change password
                             user.setConfirmPassword(user.getPassword());
                             userDao.updateUser(user);
@@ -152,31 +147,28 @@ public class UserDirectoryFormBinder extends DefaultFormBinder implements FormLo
 
                     // create new user
                     else {
-                        final User user = new User();
-                        user.setId(row.getId());
-                        user.setUsername(username);
-                        user.setFirstName(firstName);
-                        user.setLastName(lastName);
-                        user.setEmail(email);
-                        user.setActive(active);
-                        user.setLocale(locale);
-                        user.setTelephoneNumber(telephoneNumber);
-                        user.setPassword(plainPassword);
-                        user.setConfirmPassword(plainConfirmPassword);
-
-                        userDao.addUser(generatePassword(user));
+                        userDao.addUser(generatePassword(new User() {{
+                            setId(row.getId());
+                            setUsername(username);
+                            setFirstName(firstName);
+                            setLastName(lastName);
+                            setEmail(email);
+                            setActive(active);
+                            setLocale(locale);
+                            setTelephoneNumber(telephoneNumber);
+                            setPassword(plainPassword);
+                            setConfirmPassword(plainConfirmPassword);
+                        }}));
 
                         row.setDateCreated(now);
                         row.setCreatedBy(currentUser);
                     }
 
-                    final FormRowSet result = new FormRowSet();
-                    result.add(row);
+                    final FormRowSet result = new FormRowSet() {{
+                        add(row);
+                    }};
+
                     return result;
-                }, (FormRow r, PasswordException e) -> {
-                    formData.addFormError("password", e.getMessage());
-                    formData.addFormError("confirmPassword", e.getMessage());
-                    return null;
                 }))
                 .orElse(originalRowSet);
     }
@@ -220,8 +212,8 @@ public class UserDirectoryFormBinder extends DefaultFormBinder implements FormLo
 
         final Employment employment = Optional.of(user)
                 .map(User::getEmployments)
-                .map(Collection<Employment>::stream)
-                .orElseGet(Stream::empty)
+                .stream()
+                .flatMap(Collection<Employment>::stream)
                 .findFirst()
                 .orElseGet(() -> {
                     Employment newEmployment = new Employment();

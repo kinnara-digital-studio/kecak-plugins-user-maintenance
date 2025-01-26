@@ -1,4 +1,4 @@
-package com.kinnarastudio.kecakplugins.usermaintenance.userview;
+package com.kinnarastudio.kecakplugins.usermaintenance.userview.menu;
 
 import com.kinnarastudio.kecakplugins.usermaintenance.utils.Utils;
 
@@ -73,7 +73,7 @@ public class ProfileMenu extends UserviewMenu {
         String appId = appDef.getId();
         String appVersion = appDef.getVersion().toString();
         Object[] arguments = new Object[]{appId, appVersion};
-        String json = AppUtil.readPluginResource(getClass().getName(), "/properties/profileMenu.json", arguments, true, "/messages/profileMenu");
+        String json = AppUtil.readPluginResource(getClass().getName(), "/properties/userview/menu/profileMenu.json", arguments, true, "/messages/profileMenu");
         return json;
     }
 

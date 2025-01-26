@@ -1,7 +1,7 @@
-package com.kinnarastudio.kecakplugins.usermaintenance.userview;
+package com.kinnarastudio.kecakplugins.usermaintenance.userview.menu;
 
-import com.kinnarastudio.kecakplugins.usermaintenance.datalist.ResetUserPasswordDataListAction;
-import com.kinnarastudio.kecakplugins.usermaintenance.datalist.UserDirectoryDataListBinder;
+import com.kinnarastudio.kecakplugins.usermaintenance.datalist.action.ResetUserPasswordDataListAction;
+import com.kinnarastudio.kecakplugins.usermaintenance.datalist.binder.UserDirectoryDataListBinder;
 import com.kinnarastudio.kecakplugins.usermaintenance.utils.Utils;
 import com.kinnarastudio.commons.Try;
 import com.kinnarastudio.commons.jsonstream.JSONCollectors;
@@ -118,12 +118,12 @@ public class UserDirectoryMenu extends UserviewMenu  {
                 .collect(JSONCollectors.toJSONArray());
 
         try {
-            final JSONArray jsonPropertiesUserDirectoryMenu = new JSONArray(AppUtil.readPluginResource(getClassName(), "/properties/UserDirectoryMenu.json", new String[]{jsonColumns.toString()}, true, null));
-            final JSONArray jsonPropertiesResetUserPasswordDataListAction = new JSONArray(AppUtil.readPluginResource(getClassName(), "/properties/ResetUserPasswordDataListAction.json", null, true, null));
+            final JSONArray jsonPropertiesUserDirectoryMenu = new JSONArray(AppUtil.readPluginResource(getClassName(), "/properties/userview/menu/UserDirectoryMenu.json", new String[]{jsonColumns.toString()}, true, null));
+            final JSONArray jsonPropertiesResetUserPasswordDataListAction = new JSONArray(AppUtil.readPluginResource(getClassName(), "/properties/datalist/action/ResetUserPasswordDataListAction.json", null, true, null));
             return JSONMapper.concat(jsonPropertiesUserDirectoryMenu,
                     jsonPropertiesResetUserPasswordDataListAction).toString();
         } catch (JSONException e) {
-            return AppUtil.readPluginResource(getClassName(), "/properties/UserDirectoryMenu.json", new String[]{jsonColumns.toString()}, true, null);
+            return AppUtil.readPluginResource(getClassName(), "/properties/userview/menu/UserDirectoryMenu.json", new String[]{jsonColumns.toString()}, true, null);
         }
     }
 

@@ -3,13 +3,16 @@ package com.kinnarastudio.kecakplugins.usermaintenance;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import com.kinnarastudio.kecakplugins.usermaintenance.datalist.ResetUserPasswordDataListAction;
-import com.kinnarastudio.kecakplugins.usermaintenance.datalist.UserDirectoryDataListBinder;
-import com.kinnarastudio.kecakplugins.usermaintenance.form.UserDirectoryFormBinder;
-import com.kinnarastudio.kecakplugins.usermaintenance.form.UserProfileFormBinder;
-import com.kinnarastudio.kecakplugins.usermaintenance.process.GeneratePasswordTool;
-import com.kinnarastudio.kecakplugins.usermaintenance.userview.ProfileMenu;
-import com.kinnarastudio.kecakplugins.usermaintenance.userview.UserDirectoryMenu;
+import com.kinnarastudio.kecakplugins.usermaintenance.datalist.action.ResetUserPasswordDataListAction;
+import com.kinnarastudio.kecakplugins.usermaintenance.datalist.binder.UserDirectoryDataListBinder;
+import com.kinnarastudio.kecakplugins.usermaintenance.form.binder.UserDirectoryFormBinder;
+import com.kinnarastudio.kecakplugins.usermaintenance.form.binder.UserProfileFormBinder;
+import com.kinnarastudio.kecakplugins.usermaintenance.form.validator.ConfirmationPasswordValidator;
+import com.kinnarastudio.kecakplugins.usermaintenance.form.validator.PasswordValidator;
+import com.kinnarastudio.kecakplugins.usermaintenance.form.validator.ProfilePasswordValidator;
+import com.kinnarastudio.kecakplugins.usermaintenance.process.tool.GeneratePasswordTool;
+import com.kinnarastudio.kecakplugins.usermaintenance.userview.menu.ProfileMenu;
+import com.kinnarastudio.kecakplugins.usermaintenance.userview.menu.UserDirectoryMenu;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -32,6 +35,11 @@ public class Activator implements BundleActivator {
         // form binder
         registrationList.add(context.registerService(UserDirectoryFormBinder.class.getName(), new UserDirectoryFormBinder(), null));
         registrationList.add(context.registerService(UserProfileFormBinder.class.getName(), new UserProfileFormBinder(), null));
+
+        // form validator
+        registrationList.add(context.registerService(PasswordValidator.class.getName(), new PasswordValidator(), null));
+        registrationList.add(context.registerService(ProfilePasswordValidator.class.getName(), new ProfilePasswordValidator(), null));
+        registrationList.add(context.registerService(ConfirmationPasswordValidator.class.getName(), new ConfirmationPasswordValidator(), null));
 
         // datalist binder
         registrationList.add(context.registerService(UserDirectoryDataListBinder.class.getName(), new UserDirectoryDataListBinder(), null));

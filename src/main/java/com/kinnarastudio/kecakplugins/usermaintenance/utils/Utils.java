@@ -1,6 +1,6 @@
 package com.kinnarastudio.kecakplugins.usermaintenance.utils;
 
-import com.kinnarastudio.kecakplugins.usermaintenance.form.UserDirectoryFormBinder;
+import com.kinnarastudio.kecakplugins.usermaintenance.form.binder.UserDirectoryFormBinder;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.lib.LinkButton;
 import org.joget.apps.form.lib.PasswordField;

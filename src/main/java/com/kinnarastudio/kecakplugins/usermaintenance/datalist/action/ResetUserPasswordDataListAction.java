@@ -1,4 +1,4 @@
-package com.kinnarastudio.kecakplugins.usermaintenance.datalist;
+package com.kinnarastudio.kecakplugins.usermaintenance.datalist.action;
 
 import com.kinnarastudio.kecakplugins.usermaintenance.utils.PasswordUtilMixin;
 import com.kinnarastudio.kecakplugins.usermaintenance.utils.StartProcessUtils;
@@ -11,7 +11,6 @@ import org.joget.apps.datalist.model.DataListCollection;
 import org.joget.commons.util.LogUtil;
 import org.joget.directory.dao.UserDao;
 import org.joget.directory.model.User;
-import org.joget.plugin.base.DefaultApplicationPlugin;
 import org.joget.plugin.base.PluginManager;
 import org.joget.workflow.util.WorkflowUtil;
 import org.springframework.context.ApplicationContext;
@@ -141,7 +140,7 @@ public class ResetUserPasswordDataListAction extends DataListActionDefault imple
 
     @Override
     public String getPropertyOptions() {
-        return AppUtil.readPluginResource(getClassName(), "/properties/ResetUserPasswordDataListAction.json");
+        return AppUtil.readPluginResource(getClassName(), "/properties/datalist/action/ResetUserPasswordDataListAction.json");
     }
 
     protected boolean isPostMethod() {

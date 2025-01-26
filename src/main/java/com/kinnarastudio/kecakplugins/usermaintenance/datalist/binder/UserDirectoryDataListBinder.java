@@ -1,4 +1,4 @@
-package com.kinnarastudio.kecakplugins.usermaintenance.datalist;
+package com.kinnarastudio.kecakplugins.usermaintenance.datalist.binder;
 
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.datalist.model.*;
@@ -16,7 +16,7 @@ import java.util.stream.Stream;
 public class UserDirectoryDataListBinder extends DataListBinderDefault {
     @Override
     public DataListColumn[] getColumns() {
-        return new DataListColumn[] {
+        return new DataListColumn[]{
                 new DataListColumn("id", "ID", true),
                 new DataListColumn("username", "Username", true),
                 new DataListColumn("firstName", "First Name", true),
@@ -37,8 +37,8 @@ public class UserDirectoryDataListBinder extends DataListBinderDefault {
         final UserDao userDao = (UserDao) applicationContext.getBean("userDao");
         final DataListFilterQueryObject criteria = getCriteria(map, filterQueryObjects);
         return Optional.ofNullable(userDao.findUsers(criteria.getQuery(), criteria.getValues(), sort, desc, start, rows))
-                .map(Collection::stream)
-                .orElseGet(Stream::empty)
+                .stream()
+                .flatMap(Collection::stream)
                 .map(r -> {
                     final Map<String, Object> record = new HashMap<>();
                     record.put("id", r.getId());
@@ -108,19 +108,17 @@ public class UserDirectoryDataListBinder extends DataListBinderDefault {
 
     protected DataListFilterQueryObject getCriteria(Map properties, DataListFilterQueryObject[] filterQueryObjects) {
         return Arrays.stream(filterQueryObjects)
-                .collect(() -> {
-                            final DataListFilterQueryObject collected = new DataListFilterQueryObject();
-                            collected.setValues(new String[0]);
-                            collected.setQuery("where 1 = 1");
-                            collected.setOperator("");
-                            return collected;
-                        },
+                .collect(() -> new DataListFilterQueryObject() {{
+                            setValues(new String[0]);
+                            setQuery("where 1 = 1");
+                            setOperator("");
+                        }},
                         (collected, item) -> {
                             final String query = String.join(" ", collected.getQuery(), item.getOperator(), item.getQuery());
                             collected.setQuery(query);
 
                             final String[] values = Stream.concat(Arrays.stream(collected.getValues()), Arrays.stream(item.getValues()))
-                                            .toArray(String[]::new);
+                                    .toArray(String[]::new);
                             collected.setValues(values);
                         },
                         (f1, f2) -> {

@@ -1,4 +1,4 @@
-package com.kinnarastudio.kecakplugins.usermaintenance.form;
+package com.kinnarastudio.kecakplugins.usermaintenance.form.binder;
 
 import com.kinnarastudio.commons.Try;
 import com.kinnarastudio.kecakplugins.usermaintenance.exceptions.PasswordException;
@@ -8,9 +8,7 @@ import org.joget.apps.form.lib.DefaultFormBinder;
 import org.joget.apps.form.model.*;
 import org.joget.apps.form.service.FormUtil;
 import org.joget.commons.util.SecurityUtil;
-import org.joget.directory.dao.OrganizationDao;
 import org.joget.directory.dao.UserDao;
-import org.joget.directory.model.Employment;
 import org.joget.directory.model.User;
 import org.joget.plugin.base.PluginManager;
 import org.joget.workflow.util.WorkflowUtil;
