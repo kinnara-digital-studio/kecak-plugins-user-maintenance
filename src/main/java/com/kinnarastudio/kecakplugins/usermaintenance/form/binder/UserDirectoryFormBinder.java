@@ -5,7 +5,6 @@ import com.kinnarastudio.kecakplugins.usermaintenance.utils.PasswordUtilMixin;
 import org.joget.apps.app.service.AppUtil;
 import org.joget.apps.form.lib.DefaultFormBinder;
 import org.joget.apps.form.model.*;
-import org.joget.apps.form.service.FormUtil;
 import org.joget.commons.util.SecurityUtil;
 import org.joget.directory.dao.EmploymentDao;
 import org.joget.directory.dao.UserDao;
@@ -45,18 +44,7 @@ import java.util.*;
  * </ul>
  */
 public class UserDirectoryFormBinder extends DefaultFormBinder implements FormLoadElementBinder,
-        FormStoreElementBinder, FormDataDeletableBinder, PasswordUtilMixin {
-
-    @Override
-    public String getFormId() {
-        final Form form = FormUtil.findRootForm(getElement());
-        return form.getPropertyString(FormUtil.PROPERTY_ID);
-    }
-
-    @Override
-    public String getTableName() {
-        return "dir_user";
-    }
+        FormStoreElementBinder, FormDeleteBinder, PasswordUtilMixin {
 
     @Override
     public FormRowSet load(Element element, String primaryKey, FormData formData) {
@@ -240,5 +228,16 @@ public class UserDirectoryFormBinder extends DefaultFormBinder implements FormLo
 
     public void setCheckPassword(boolean checkPassword) {
         setProperty("checkPassword", "true");
+    }
+
+    @Override
+    public void delete(Element element, FormRowSet rowSet, FormData formData, boolean deleteGrid, boolean deleteSubform, boolean abortProcess, boolean deleteFiles, boolean hardDelete) {
+        final ApplicationContext applicationContext = AppUtil.getApplicationContext();
+        final UserDao userDao = (UserDao) applicationContext.getBean("userDao");
+        Optional.ofNullable(rowSet)
+                .stream()
+                .flatMap(FormRowSet::stream)
+                .map(FormRow::getId)
+                .forEach(userDao::deleteUser);
     }
 }
