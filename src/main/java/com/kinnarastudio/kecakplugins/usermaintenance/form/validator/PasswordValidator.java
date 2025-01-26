@@ -24,34 +24,35 @@ public class PasswordValidator extends FormValidator {
 
         final String policyMessage = getPolicyMessage();
 
-        if (isRequired() && password.isEmpty()) {
+        boolean isRequired = isRequired();
+        if (!password.isEmpty()) {
+            int minimumLength = getMinimumPasswordLength();
+            if (password.length() < minimumLength) {
+                formData.addFormError(elementId, String.format("Password requires at least %d characters", minimumLength));
+                return false;
+            }
+
+            if (needsUpperCase() && !contains(password, "[A-Z]")) {
+                formData.addFormError(elementId, "Password requires UPPER CASEs");
+                return false;
+            }
+
+            if (needsLowerCase() && !contains(password, "[a-z]")) {
+                formData.addFormError(elementId, "Password requires lower cases");
+                return false;
+            }
+
+            if (needsNumerics() && !contains(password, "[0-9]")) {
+                formData.addFormError(elementId, "Password requires numerics");
+                return false;
+            }
+
+            if (needsSpecialCharacters() && !contains(password, "[!@#\\$%\\^&\\*]")) {
+                formData.addFormError(elementId, "Password requires special characters");
+                return false;
+            }
+        } else if (isRequired) {
             formData.addFormError(elementId, "Password cannot be empty");
-            return false;
-        }
-
-        if (needsUpperCase() && !contains(password, "[A-Z]")) {
-            formData.addFormError(elementId, "Password requires UPPER CASEs");
-            return false;
-        }
-
-        if (needsLowerCase() && !contains(password, "[a-z]")) {
-            formData.addFormError(elementId, "Password requires lower cases");
-            return false;
-        }
-
-        if (needsNumerics() && !contains(password, "[0-9]")) {
-            formData.addFormError(elementId, "Password requires numerics");
-            return false;
-        }
-
-        if (needsSpecialCharacters() && !contains(password, "[!@#\\$%\\^&\\*]")) {
-            formData.addFormError(elementId, "Password requires special characters");
-            return false;
-        }
-
-        int minimumLength = getMinimumPasswordLength();
-        if (password.length() < minimumLength) {
-            formData.addFormError(elementId, String.format("Password requires at least %d characters", minimumLength));
             return false;
         }
 
@@ -132,8 +133,8 @@ public class PasswordValidator extends FormValidator {
     public String getElementDecoration() {
         final StringBuilder sb = new StringBuilder();
         if (isRequired()) sb.append("*");
-        if (needsLowerCase()) sb.append("a");
         if (needsUpperCase()) sb.append("A");
+        if (needsLowerCase()) sb.append("a");
         if (needsNumerics()) sb.append("0");
         if (needsSpecialCharacters()) sb.append("@");
 
