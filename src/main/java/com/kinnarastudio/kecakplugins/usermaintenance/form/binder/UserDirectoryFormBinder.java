@@ -7,9 +7,11 @@ import org.joget.apps.form.lib.DefaultFormBinder;
 import org.joget.apps.form.model.*;
 import org.joget.commons.util.SecurityUtil;
 import org.joget.directory.dao.EmploymentDao;
+import org.joget.directory.dao.RoleDao;
 import org.joget.directory.dao.UserDao;
 import org.joget.directory.model.Employment;
 import org.joget.directory.model.Organization;
+import org.joget.directory.model.Role;
 import org.joget.directory.model.User;
 import org.joget.plugin.base.PluginManager;
 import org.joget.workflow.util.WorkflowUtil;
@@ -75,7 +77,8 @@ public class UserDirectoryFormBinder extends DefaultFormBinder implements FormLo
     public FormRowSet store(Element element, FormRowSet originalRowSet, FormData formData) {
         final ApplicationContext applicationContext = AppUtil.getApplicationContext();
         final UserDao userDao = (UserDao) applicationContext.getBean("userDao");
-
+        final RoleDao roleDao = (RoleDao) applicationContext.getBean("roleDao");
+        final Role roleUser = roleDao.getRole("ROLE_USER");
         final Date now = new Date();
         final String currentUser = WorkflowUtil.getCurrentUsername();
 
@@ -146,6 +149,7 @@ public class UserDirectoryFormBinder extends DefaultFormBinder implements FormLo
                             setTelephoneNumber(telephoneNumber);
                             setPassword(plainPassword);
                             setConfirmPassword(plainConfirmPassword);
+                            setRoles(Collections.singleton(roleUser));
                         }}));
 
                         row.setDateCreated(now);
