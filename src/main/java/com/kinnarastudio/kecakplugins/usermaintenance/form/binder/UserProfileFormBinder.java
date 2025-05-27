@@ -134,7 +134,7 @@ public class UserProfileFormBinder extends DefaultFormBinder implements FormLoad
 
     @Override
     public String getLabel() {
-        return "User Maintenance - User Profile Form Binder";
+        return "User Maintenance Profile Form Binder";
     }
 
     @Override

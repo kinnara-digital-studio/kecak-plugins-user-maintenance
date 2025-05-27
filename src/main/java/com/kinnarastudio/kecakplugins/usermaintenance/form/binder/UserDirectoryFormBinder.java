@@ -185,7 +185,7 @@ public class UserDirectoryFormBinder extends DefaultFormBinder implements FormLo
 
     @Override
     public String getLabel() {
-        return "User Maintenance - User Directory Form Binder";
+        return "User Maintenance Directory Form Binder";
     }
 
     @Override
